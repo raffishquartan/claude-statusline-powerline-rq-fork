@@ -18,7 +18,7 @@ export class SessionSegment extends BaseSegment {
 		// First try to get session data from database
 		const usage = this.get_session_usage(data);
 		if (!usage) {
-			return null; // Hide segment if no session data available
+			return this.no_data_yet(config);
 		}
 
 		const total_tokens =
@@ -92,9 +92,27 @@ export class SessionSegment extends BaseSegment {
 			// No session found in database
 			return null;
 		} catch (error) {
-			// Database error - don't show segment
+			// Database error
 			return null;
 		}
+	}
+
+	private no_data_yet(config: StatuslineConfig): SegmentData {
+		const { style_override, get_icon } = this.setup_segment(config);
+		const theme = config.current_theme?.segments.session;
+		const cost_icon = get_icon('cost');
+		const content = this.finalize_content(
+			`${cost_icon} no data yet`,
+			config,
+			style_override,
+		);
+		return this.create_segment_with_fallback(
+			content,
+			theme,
+			'session',
+			config.separators.session,
+			style_override,
+		);
 	}
 
 	private calculate_session_duration(
