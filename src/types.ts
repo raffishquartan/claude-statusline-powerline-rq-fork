@@ -77,6 +77,7 @@ export type SeparatorStyle =
  * - `session`: Shows session usage/cost information
  * - `context`: Shows cache hit rate and context usage
  * - `usage`: Shows usage statistics from SQLite database
+ * - `window`: Shows context window usage as % of model's context window
  */
 export type SegmentType =
 	| 'model'
@@ -86,7 +87,8 @@ export type SegmentType =
 	| 'context'
 	| 'usage'
 	| 'session_id'
-	| 'rate_limits';
+	| 'rate_limits'
+	| 'window';
 
 /**
  * Available themes that define separator and styling patterns
@@ -167,6 +169,32 @@ export interface SeparatorConfig {
 	session_id?: SeparatorStyle;
 	/** Separator style for the rate_limits segment */
 	rate_limits?: SeparatorStyle;
+	/** Separator style for the window segment (used only in warn/danger color states) */
+	window?: SeparatorStyle;
+}
+
+/**
+ * Options specific to the window segment
+ */
+export interface WindowSegmentOptions {
+	/** Show percentage of context window used (default: true) */
+	show_percent?: boolean;
+	/** Show consumed/total token counts e.g. "42k / 200k" (default: false) */
+	show_tokens?: boolean;
+	/** % threshold for amber/warning color (default: 51 = 60% of the 85% auto-compact point) */
+	threshold_warn?: number;
+	/** % threshold for red/danger color (default: 80) */
+	threshold_danger?: number;
+	/** Foreground color in normal (transparent) state — hex or "terminal" for terminal default (default: "terminal") */
+	color_normal_fg?: string;
+	/** Background color in warn state (default: "#ea580c") */
+	color_warn_bg?: string;
+	/** Foreground color in warn state — hex or "auto" to derive from background (default: "auto") */
+	color_warn_fg?: string;
+	/** Background color in danger state (default: "#dc2626") */
+	color_danger_bg?: string;
+	/** Foreground color in danger state — hex or "auto" to derive from background (default: "auto") */
+	color_danger_fg?: string;
 }
 
 /**
@@ -263,6 +291,8 @@ export interface SegmentConfig {
 	type: SegmentType;
 	/** Custom styling for this segment */
 	style?: SegmentStyleConfig;
+	/** Options specific to the window segment (only used when type is "window") */
+	window_options?: WindowSegmentOptions;
 }
 
 /**

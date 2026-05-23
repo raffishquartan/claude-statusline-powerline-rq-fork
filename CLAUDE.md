@@ -59,9 +59,12 @@ pnpm run release      # Build and publish
 - **Auto-registration**: Segments auto-register on import via
   `src/segments/index.ts`
 - **Built-in segments**: model, directory, git, session, context,
-  usage, session_id, rate_limits (in `src/segments/`)
+  usage, session_id, rate_limits, window (in `src/segments/`)
 - Each segment implements `build()` method returning styled segment
   with separator info
+- **window segment**: reads last JSONL assistant entry to compute real
+  context window % — transparent bg below warn threshold, amber/red
+  above; configurable via `window_options` in segment_config
 
 ### Configuration System
 
