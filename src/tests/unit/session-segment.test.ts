@@ -92,23 +92,23 @@ function run_session_segment_tests(): boolean {
 			config,
 		);
 
-		// Should show "no data" since session not in database
+		// Should show "nodata" since session not in database
 		if (missing_result === null) {
 			console.log(
-				'❌ FAIL: Should return "no data" segment when session not in database',
+				'❌ FAIL: Should return "nodata" segment when session not in database',
 			);
 			return false;
 		}
 
-		if (!missing_result.content.includes('no data')) {
+		if (!missing_result.content.includes('nodata')) {
 			console.log(
-				'❌ FAIL: Missing session should show "no data"',
+				'❌ FAIL: Missing session should show "nodata"',
 			);
 			console.log('Result content:', missing_result.content);
 			return false;
 		}
 
-		console.log('✅ PASS: Missing session shows "no data"');
+		console.log('✅ PASS: Missing session shows "nodata"');
 
 		// Test 3: Database error handling
 		console.log('\nTest 3: Database error handling');
@@ -124,13 +124,13 @@ function run_session_segment_tests(): boolean {
 
 		const error_result = session_segment.build(error_data, config);
 
-		// Should show "no data" on database error
+		// Should show "nodata" on database error
 		if (
 			error_result === null ||
-			!error_result.content.includes('no data')
+			!error_result.content.includes('nodata')
 		) {
 			console.log(
-				'❌ FAIL: Should handle database errors gracefully with "no data"',
+				'❌ FAIL: Should handle database errors gracefully with "nodata"',
 			);
 			return false;
 		}
