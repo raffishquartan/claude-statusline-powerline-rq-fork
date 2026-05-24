@@ -107,17 +107,6 @@ function generate_schema(): void {
 				'#000000',
 			];
 		}
-		if (style_config.properties?.separator?.properties?.color) {
-			style_config.properties.separator.properties.color.pattern =
-				'^#[0-9a-fA-F]{6}$';
-			style_config.properties.separator.properties.color.description =
-				'Separator color in hex format';
-			style_config.properties.separator.properties.color.examples = [
-				'#1e40af',
-				'#059669',
-			];
-		}
-
 		if (style_config.properties?.icons) {
 			style_config.properties.icons.description =
 				'Custom icons for segment symbols';
@@ -160,6 +149,19 @@ function generate_schema(): void {
 				description: 'Session cost/usage icon',
 				examples: ['💰', '💲', '🪙', '\\uF0D6'],
 			};
+		}
+	}
+
+	// separator is `string | SeparatorOverride`; the color hex pattern lives
+	// on the SeparatorOverride definition rather than inline.
+	if (enhanced_schema.definitions?.SeparatorOverride) {
+		const sep_override =
+			enhanced_schema.definitions.SeparatorOverride;
+		if (sep_override.properties?.color) {
+			sep_override.properties.color.pattern = '^#[0-9a-fA-F]{6}$';
+			sep_override.properties.color.description =
+				'Separator color in hex format';
+			sep_override.properties.color.examples = ['#1e40af', '#059669'];
 		}
 	}
 

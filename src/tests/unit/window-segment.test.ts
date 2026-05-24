@@ -1,6 +1,10 @@
 import '../../segments'; // Auto-register segments
 import { segmentRegistry } from '../../core/registry';
-import { StatuslineConfig, WindowSegmentOptions } from '../../types';
+import {
+	SegmentStyleConfig,
+	StatuslineConfig,
+	WindowSegmentOptions,
+} from '../../types';
 import { hex_to_ansi } from '../../utils/colors';
 import {
 	assistant_usage_entry,
@@ -14,6 +18,7 @@ const RED_BG = hex_to_ansi('#dc2626', true);
 
 function make_config(
 	window_options?: WindowSegmentOptions,
+	style?: SegmentStyleConfig,
 ): StatuslineConfig {
 	return {
 		color_theme: 'dark',
@@ -34,7 +39,7 @@ function make_config(
 			window: 'thick',
 		},
 		segment_config: {
-			segments: [{ type: 'window', window_options }],
+			segments: [{ type: 'window', window_options, style }],
 		},
 	};
 }
@@ -256,6 +261,60 @@ function run_window_segment_tests(): boolean {
 		return false;
 	}
 	console.log('✅ PASS: percent shown as fallback');
+
+	// Test 9: string separator shorthand in transparent state → curvy
+	// Regression: "separator": "curvy" was silently ignored, leaving the
+	// transparent state at 'none' (no separator rendered at all).
+	console.log(
+		'\nTest 9: string separator override → applied in normal state',
+	);
+	const string_sep = with_session_jsonl(
+		[
+			assistant_usage_entry('claude-sonnet-4-6', {
+				input_tokens: 20000,
+			}),
+		],
+		(data) =>
+			segment.build(
+				data,
+				make_config(undefined, { separator: 'curvy' }),
+			),
+	);
+	if (!string_sep || string_sep.separator_style !== 'curvy') {
+		console.log(
+			'❌ FAIL: string separator should yield "curvy", got',
+			string_sep?.separator_style,
+		);
+		return false;
+	}
+	console.log('✅ PASS: string "curvy" applied in transparent state');
+
+	// Test 10: object separator form still works in transparent state
+	console.log(
+		'\nTest 10: object separator override → applied in normal state',
+	);
+	const object_sep = with_session_jsonl(
+		[
+			assistant_usage_entry('claude-sonnet-4-6', {
+				input_tokens: 20000,
+			}),
+		],
+		(data) =>
+			segment.build(
+				data,
+				make_config(undefined, { separator: { style: 'angly' } }),
+			),
+	);
+	if (!object_sep || object_sep.separator_style !== 'angly') {
+		console.log(
+			'❌ FAIL: object separator should yield "angly", got',
+			object_sep?.separator_style,
+		);
+		return false;
+	}
+	console.log(
+		'✅ PASS: object { style: "angly" } applied in transparent state',
+	);
 
 	console.log('\n✅ All WindowSegment tests passed!\n');
 	return true;

@@ -11,6 +11,7 @@ import { run_model_context_tests } from './unit/model-context.test';
 import { run_colors_tests } from './unit/colors.test';
 import { run_window_segment_tests } from './unit/window-segment.test';
 import { run_last_message_time_segment_tests } from './unit/last-message-time-segment.test';
+import { run_separator_config_tests } from './unit/separator-config.test';
 
 async function run_all_tests() {
 	console.log('🚀 Running All Tests\n');
@@ -30,6 +31,7 @@ async function run_all_tests() {
 		{ name: 'Session Segment', fn: run_session_segment_tests },
 		{ name: 'Model Context', fn: run_model_context_tests },
 		{ name: 'Colors', fn: run_colors_tests },
+		{ name: 'Separator Config', fn: run_separator_config_tests },
 		{ name: 'Window Segment', fn: run_window_segment_tests },
 		{
 			name: 'Last Message Time Segment',

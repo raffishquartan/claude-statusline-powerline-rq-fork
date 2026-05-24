@@ -276,6 +276,16 @@ export interface ModelPricing {
 }
 
 /**
+ * Separator styling override for a segment, in object form.
+ */
+export interface SeparatorOverride {
+	/** Separator style override */
+	style?: SeparatorStyle;
+	/** Separator color override */
+	color?: string;
+}
+
+/**
  * Styling configuration for individual segments
  */
 export interface SegmentStyleConfig {
@@ -283,13 +293,11 @@ export interface SegmentStyleConfig {
 	bg_color?: string;
 	/** Foreground/text color (hex or color name) */
 	fg_color?: string;
-	/** Separator styling */
-	separator?: {
-		/** Separator style override */
-		style?: SeparatorStyle;
-		/** Separator color override */
-		color?: string;
-	};
+	/**
+	 * Separator styling. Either a bare style name (shorthand for
+	 * `{ style: "<name>" }`) or an object with `style` and/or `color`.
+	 */
+	separator?: SeparatorStyle | SeparatorOverride;
 	/** Custom icons for the segment */
 	icons?: {
 		[key: string]: string;
@@ -298,6 +306,17 @@ export interface SegmentStyleConfig {
 	truncation_length?: number;
 	/** Minimum width - content will be padded with spaces if shorter */
 	minimum_width?: number;
+}
+
+/**
+ * A segment style whose `separator` has been normalised to object form.
+ * Produced by BaseSegment.getSegmentConfig so downstream code can always
+ * read `separator.style` / `separator.color` regardless of which form the
+ * user wrote in the config file.
+ */
+export interface ResolvedSegmentStyle
+	extends Omit<SegmentStyleConfig, 'separator'> {
+	separator?: SeparatorOverride;
 }
 
 /**

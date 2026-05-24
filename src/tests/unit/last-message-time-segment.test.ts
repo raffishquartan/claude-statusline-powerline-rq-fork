@@ -2,6 +2,7 @@ import '../../segments'; // Auto-register segments
 import { segmentRegistry } from '../../core/registry';
 import {
 	LastMessageTimeOptions,
+	SegmentStyleConfig,
 	StatuslineConfig,
 } from '../../types';
 import { hex_to_ansi } from '../../utils/colors';
@@ -16,6 +17,7 @@ const RED_BG = hex_to_ansi('#dc2626', true);
 
 function make_config(
 	options?: LastMessageTimeOptions,
+	style?: SegmentStyleConfig,
 ): StatuslineConfig {
 	return {
 		color_theme: 'dark',
@@ -40,6 +42,7 @@ function make_config(
 				{
 					type: 'last_message_time',
 					last_message_time_options: options,
+					style,
 				},
 			],
 		},
@@ -161,6 +164,32 @@ function run_last_message_time_segment_tests(): boolean {
 		return false;
 	}
 	console.log('✅ PASS: configurable threshold honoured');
+
+	// Test 6: string separator shorthand in warm state → curvy
+	// Regression: "separator": "curvy" was silently ignored, leaving the
+	// warm state at 'none' (no separator rendered).
+	console.log(
+		'\nTest 6: string separator override → applied in warm state',
+	);
+	const warm_string_sep = with_session_jsonl(
+		[assistant_timestamp_entry(new Date(Date.now() - 1 * 60_000))],
+		(data) =>
+			segment.build(
+				data,
+				make_config(undefined, { separator: 'curvy' }),
+			),
+	);
+	if (
+		!warm_string_sep ||
+		warm_string_sep.separator_style !== 'curvy'
+	) {
+		console.log(
+			'❌ FAIL: string separator should yield "curvy", got',
+			warm_string_sep?.separator_style,
+		);
+		return false;
+	}
+	console.log('✅ PASS: string "curvy" applied in warm state');
 
 	console.log('\n✅ All LastMessageTimeSegment tests passed!\n');
 	return true;

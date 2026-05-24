@@ -237,23 +237,24 @@
 					"type": "number"
 				},
 				"separator": {
-					"description": "Separator styling",
-					"properties": {
-						"color": {
-							"description": "Separator color in hex format",
-							"type": "string",
-							"pattern": "^#[0-9a-fA-F]{6}$",
-							"examples": [
-								"#1e40af",
-								"#059669"
-							]
+					"anyOf": [
+						{
+							"$ref": "#/definitions/SeparatorOverride"
 						},
-						"style": {
-							"$ref": "#/definitions/SeparatorStyle",
-							"description": "Separator style override"
+						{
+							"enum": [
+								"angly",
+								"angly2",
+								"curvy",
+								"double_chevron",
+								"none",
+								"thick",
+								"thin"
+							],
+							"type": "string"
 						}
-					},
-					"type": "object"
+					],
+					"description": "Separator styling. Either a bare style name (shorthand for\n`{ style: \"<name>\" }`) or an object with `style` and/or `color`."
 				},
 				"truncation_length": {
 					"description": "Maximum length before truncation",
@@ -352,6 +353,25 @@
 				"model",
 				"session"
 			],
+			"type": "object"
+		},
+		"SeparatorOverride": {
+			"description": "Separator styling override for a segment, in object form.",
+			"properties": {
+				"color": {
+					"description": "Separator color in hex format",
+					"type": "string",
+					"pattern": "^#[0-9a-fA-F]{6}$",
+					"examples": [
+						"#1e40af",
+						"#059669"
+					]
+				},
+				"style": {
+					"$ref": "#/definitions/SeparatorStyle",
+					"description": "Separator style override"
+				}
+			},
 			"type": "object"
 		},
 		"SeparatorStyle": {
