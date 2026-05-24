@@ -6,12 +6,10 @@ import {
 	SegmentData,
 	StatuslineConfig,
 } from '../types';
+import { ANSI_BG_DEFAULT, ANSI_FG_DEFAULT } from '../utils/ansi';
 import { hex_to_ansi, pick_fg_for_hex_bg } from '../utils/colors';
 import { get_symbol } from '../utils/symbols';
 import { BaseSegment } from './base';
-
-const ANSI_BG_DEFAULT = '\x1b[49m';
-const ANSI_FG_DEFAULT = '\x1b[39m';
 
 const DEFAULTS = {
 	cache_warn_minutes: 5,

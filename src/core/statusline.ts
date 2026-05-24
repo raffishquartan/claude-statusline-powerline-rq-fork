@@ -1,11 +1,20 @@
 import { load_config } from '../config';
-import { create_styled_separator } from '../separators/styles';
+import {
+	create_styled_separator,
+	create_styled_separator_left,
+} from '../separators/styles';
 import {
 	ClaudeStatusInput,
 	LineSegments,
+	SegmentData,
+	SeparatorStyle,
 	StatuslineConfig,
 } from '../types';
-import { ANSI_RESET } from '../utils/ansi';
+import {
+	ANSI_RESET,
+	ansi_bg_to_fg,
+	is_transparent_bg,
+} from '../utils/ansi';
 import { segmentRegistry } from './registry';
 
 function create_segment(
@@ -14,6 +23,38 @@ function create_segment(
 	fg_color: string,
 ): string {
 	return `${bg_color}${fg_color} ${content} ${ANSI_RESET}`;
+}
+
+/**
+ * Render the separator that follows `current`. A powerline separator's
+ * appearance depends on both adjacent backgrounds:
+ *
+ * - current coloured  → normal right-facing glyph filled with current's colour
+ * - current transparent, next coloured → left-facing glyph filled with next's
+ *   colour on the transparent cell, so the transparent segment's portion stays
+ *   the terminal background instead of a foreground fill
+ * - both transparent, or transparent and last → no glyph (nothing to transition)
+ */
+export function render_separator(
+	current: SegmentData,
+	next?: SegmentData,
+): string {
+	const style = (current.separator_style || 'thick') as SeparatorStyle;
+
+	if (is_transparent_bg(current.bg_color)) {
+		if (!next || is_transparent_bg(next.bg_color)) return '';
+		return create_styled_separator_left(
+			ansi_bg_to_fg(next.bg_color),
+			current.bg_color,
+			style,
+		);
+	}
+
+	return create_styled_separator(
+		current.separator_from_color,
+		next ? next.bg_color : '',
+		style,
+	);
 }
 
 function build_line_segments(
@@ -54,27 +95,9 @@ function build_line_segments(
 			),
 		);
 
-		// Add separator to next segment (if there is one)
-		if (next) {
-			const separator_style = current.separator_style || 'thick';
-			output.push(
-				create_styled_separator(
-					current.separator_from_color,
-					next.bg_color,
-					separator_style as any,
-				),
-			);
-		} else {
-			// Final separator
-			const separator_style = current.separator_style || 'thick';
-			output.push(
-				create_styled_separator(
-					current.separator_from_color,
-					'',
-					separator_style as any,
-				),
-			);
-		}
+		// Add the separator that transitions to the next segment (or the
+		// trailing separator when this is the last segment).
+		output.push(render_separator(current, next));
 	}
 
 	return output.join('');
@@ -131,27 +154,9 @@ export function build_statusline(data: ClaudeStatusInput): string {
 			),
 		);
 
-		// Add separator to next segment (if there is one)
-		if (next) {
-			const separator_style = current.separator_style || 'thick';
-			output.push(
-				create_styled_separator(
-					current.separator_from_color,
-					next.bg_color,
-					separator_style as any,
-				),
-			);
-		} else {
-			// Final separator
-			const separator_style = current.separator_style || 'thick';
-			output.push(
-				create_styled_separator(
-					current.separator_from_color,
-					'',
-					separator_style as any,
-				),
-			);
-		}
+		// Add the separator that transitions to the next segment (or the
+		// trailing separator when this is the last segment).
+		output.push(render_separator(current, next));
 	}
 
 	return output.join('');

@@ -5,6 +5,36 @@
 // Reset codes
 export const ANSI_RESET = '\x1b[0m';
 
+// Terminal-default (transparent) codes: keep the terminal's own colours
+export const ANSI_BG_DEFAULT = '\x1b[49m';
+export const ANSI_FG_DEFAULT = '\x1b[39m';
+
+/** True when a background ANSI code is the terminal default (transparent). */
+export function is_transparent_bg(bg_color: string): boolean {
+	return bg_color === ANSI_BG_DEFAULT;
+}
+
+/**
+ * Convert a background ANSI code into the equivalent foreground code so a
+ * segment's colour can be used to fill a separator glyph. Handles 24-bit
+ * (48;2), 256-colour (48;5), the default background, and the basic 16-colour
+ * ranges. Anything unrecognised is returned unchanged.
+ */
+export function ansi_bg_to_fg(bg_color: string): string {
+	if (bg_color === ANSI_BG_DEFAULT) return ANSI_FG_DEFAULT;
+	if (bg_color.includes('[48;')) return bg_color.replace('[48;', '[38;');
+
+	const match = bg_color.match(/^\x1b\[(\d+)m$/);
+	if (match) {
+		const code = parseInt(match[1], 10);
+		// 40-47 → 30-37 (standard), 100-107 → 90-97 (bright)
+		if ((code >= 40 && code <= 47) || (code >= 100 && code <= 107)) {
+			return `\x1b[${code - 10}m`;
+		}
+	}
+	return bg_color;
+}
+
 // Background colors (48;2;r;g;b format for 24-bit)
 export const ANSI_BG = {
 	red: '\x1b[41m',
