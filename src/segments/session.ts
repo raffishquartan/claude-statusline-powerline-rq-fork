@@ -1,10 +1,8 @@
-import { DEFAULT_PRICING, MODEL_PRICING } from '../config';
 import {
 	ClaudeStatusInput,
 	SessionUsage,
 	StatuslineConfig,
 } from '../types';
-import { format_tokens } from '../utils/token-formatting';
 import { get_usage_db } from '../utils/usage-db';
 import { BaseSegment, SegmentData } from './base';
 
@@ -21,36 +19,15 @@ export class SessionSegment extends BaseSegment {
 			return this.no_data_yet(config);
 		}
 
-		const total_tokens =
-			usage.totalInputTokens + usage.totalOutputTokens;
 		const cost_str =
 			usage.totalCost < 0.01
 				? '< $0.01'
 				: `$${usage.totalCost.toFixed(2)}`;
 
-		// Calculate context usage
-		const pricing =
-			MODEL_PRICING[usage.modelUsed || ''] || DEFAULT_PRICING;
-		const context_used = total_tokens;
-		const context_remaining = pricing.context_window - context_used;
-		const context_percent = Math.round(
-			(context_used / pricing.context_window) * 100,
-		);
-
-		// Format context display
-		let context_display = '';
-		if (context_percent >= 90) {
-			context_display = ` !${context_percent}%`;
-		} else if (context_percent >= 75) {
-			context_display = ` ${context_percent}%`;
-		} else {
-			context_display = ` ${Math.round(context_remaining / 1000)}k left`;
-		}
-
 		const { style_override, get_icon } = this.setup_segment(config);
 		const theme = config.current_theme?.segments.session;
 		const cost_icon = get_icon('cost');
-		const raw_content = `${cost_icon} ${format_tokens(total_tokens)} • ${cost_str}${context_display}`;
+		const raw_content = `${cost_icon} ${cost_str}`;
 		const content = this.finalize_content(
 			raw_content,
 			config,
