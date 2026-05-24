@@ -22,6 +22,28 @@
 			],
 			"type": "string"
 		},
+		"LastMessageTimeOptions": {
+			"description": "Options specific to the last_message_time segment",
+			"properties": {
+				"cache_warn_minutes": {
+					"description": "Minutes since last API call before the segment turns red (cache cold). Default: 5",
+					"type": "number"
+				},
+				"color_cold_bg": {
+					"description": "Background color when cache is cold (default: \"#dc2626\")",
+					"type": "string"
+				},
+				"color_cold_fg": {
+					"description": "Foreground color when cache is cold — hex or \"auto\" (default: \"auto\")",
+					"type": "string"
+				},
+				"color_warm_fg": {
+					"description": "Foreground color when cache is warm — hex or \"terminal\" (default: \"terminal\")",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
 		"LineSegments": {
 			"description": "Defines which segments appear on a specific line\nSegments are optional (can be omitted from a line)",
 			"properties": {
@@ -32,6 +54,9 @@
 					"type": "boolean"
 				},
 				"git": {
+					"type": "boolean"
+				},
+				"last_message_time": {
 					"type": "boolean"
 				},
 				"model": {
@@ -93,6 +118,10 @@
 		"SegmentConfig": {
 			"description": "Configuration for a single segment with advanced options",
 			"properties": {
+				"last_message_time_options": {
+					"$ref": "#/definitions/LastMessageTimeOptions",
+					"description": "Options specific to the last_message_time segment (only used when type is \"last_message_time\")"
+				},
 				"style": {
 					"$ref": "#/definitions/SegmentStyleConfig",
 					"description": "Custom styling for this segment"
@@ -239,6 +268,7 @@
 				"context",
 				"directory",
 				"git",
+				"last_message_time",
 				"model",
 				"rate_limits",
 				"session",
@@ -285,6 +315,10 @@
 				"git": {
 					"$ref": "#/definitions/Record%3CGitState%2CSeparatorStyle%3E",
 					"description": "Separator styles for different git states"
+				},
+				"last_message_time": {
+					"$ref": "#/definitions/SeparatorStyle",
+					"description": "Separator style for the last_message_time segment (used only when cache is cold)"
 				},
 				"model": {
 					"$ref": "#/definitions/SeparatorStyle",

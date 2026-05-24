@@ -8,6 +8,7 @@ export { RateLimitsSegment } from './rate-limits';
 export { SessionIdSegment } from './session-id';
 export { UsageSegment } from './usage';
 export { WindowSegment } from './window';
+export { LastMessageTimeSegment } from './last-message-time';
 
 // Auto-register all segments
 import { segmentRegistry } from '../core/registry';
@@ -20,6 +21,7 @@ import { RateLimitsSegment } from './rate-limits';
 import { SessionIdSegment } from './session-id';
 import { UsageSegment } from './usage';
 import { WindowSegment } from './window';
+import { LastMessageTimeSegment } from './last-message-time';
 
 // Register default segments
 segmentRegistry.register(new ModelSegment());
@@ -31,3 +33,4 @@ segmentRegistry.register(new RateLimitsSegment());
 segmentRegistry.register(new SessionIdSegment());
 segmentRegistry.register(new UsageSegment());
 segmentRegistry.register(new WindowSegment());
+segmentRegistry.register(new LastMessageTimeSegment());

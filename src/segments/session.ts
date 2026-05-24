@@ -79,7 +79,7 @@ export class SessionSegment extends BaseSegment {
 		const theme = config.current_theme?.segments.session;
 		const cost_icon = get_icon('cost');
 		const content = this.finalize_content(
-			`${cost_icon} no data yet`,
+			`${cost_icon} no data`,
 			config,
 			style_override,
 		);

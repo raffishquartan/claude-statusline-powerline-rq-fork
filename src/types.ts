@@ -88,7 +88,8 @@ export type SegmentType =
 	| 'usage'
 	| 'session_id'
 	| 'rate_limits'
-	| 'window';
+	| 'window'
+	| 'last_message_time';
 
 /**
  * Available themes that define separator and styling patterns
@@ -171,6 +172,22 @@ export interface SeparatorConfig {
 	rate_limits?: SeparatorStyle;
 	/** Separator style for the window segment (used only in warn/danger color states) */
 	window?: SeparatorStyle;
+	/** Separator style for the last_message_time segment (used only when cache is cold) */
+	last_message_time?: SeparatorStyle;
+}
+
+/**
+ * Options specific to the last_message_time segment
+ */
+export interface LastMessageTimeOptions {
+	/** Minutes since last API call before the segment turns red (cache cold). Default: 5 */
+	cache_warn_minutes?: number;
+	/** Foreground color when cache is warm — hex or "terminal" (default: "terminal") */
+	color_warm_fg?: string;
+	/** Background color when cache is cold (default: "#dc2626") */
+	color_cold_bg?: string;
+	/** Foreground color when cache is cold — hex or "auto" (default: "auto") */
+	color_cold_fg?: string;
 }
 
 /**
@@ -293,6 +310,8 @@ export interface SegmentConfig {
 	style?: SegmentStyleConfig;
 	/** Options specific to the window segment (only used when type is "window") */
 	window_options?: WindowSegmentOptions;
+	/** Options specific to the last_message_time segment (only used when type is "last_message_time") */
+	last_message_time_options?: LastMessageTimeOptions;
 }
 
 /**

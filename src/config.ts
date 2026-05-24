@@ -29,6 +29,7 @@ const DEFAULT_SEPARATORS: SeparatorConfig = {
 	session_id: 'thick',
 	rate_limits: 'thick',
 	window: 'thick',
+	last_message_time: 'thick',
 };
 
 // Default segments configuration with basic styling

@@ -92,23 +92,23 @@ function run_session_segment_tests(): boolean {
 			config,
 		);
 
-		// Should show "no data yet" since session not in database
+		// Should show "no data" since session not in database
 		if (missing_result === null) {
 			console.log(
-				'❌ FAIL: Should return "no data yet" segment when session not in database',
+				'❌ FAIL: Should return "no data" segment when session not in database',
 			);
 			return false;
 		}
 
-		if (!missing_result.content.includes('no data yet')) {
+		if (!missing_result.content.includes('no data')) {
 			console.log(
-				'❌ FAIL: Missing session should show "no data yet"',
+				'❌ FAIL: Missing session should show "no data"',
 			);
 			console.log('Result content:', missing_result.content);
 			return false;
 		}
 
-		console.log('✅ PASS: Missing session shows "no data yet"');
+		console.log('✅ PASS: Missing session shows "no data"');
 
 		// Test 3: Database error handling
 		console.log('\nTest 3: Database error handling');
@@ -124,13 +124,13 @@ function run_session_segment_tests(): boolean {
 
 		const error_result = session_segment.build(error_data, config);
 
-		// Should show "no data yet" on database error
+		// Should show "no data" on database error
 		if (
 			error_result === null ||
-			!error_result.content.includes('no data yet')
+			!error_result.content.includes('no data')
 		) {
 			console.log(
-				'❌ FAIL: Should handle database errors gracefully with "no data yet"',
+				'❌ FAIL: Should handle database errors gracefully with "no data"',
 			);
 			return false;
 		}
