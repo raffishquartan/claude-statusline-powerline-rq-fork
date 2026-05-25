@@ -238,6 +238,15 @@ export interface StatuslineConfig {
 	current_theme?: any;
 	/** Advanced segment configuration with styling */
 	segment_config?: SegmentsConfiguration;
+	/**
+	 * The terminal's background colour, in hex (e.g. "#fdf6e3"). Used to fill
+	 * the powerline separator that follows a transparent (floating) segment so
+	 * it can point the normal direction. Without it, a transparent segment's
+	 * separator can't be drawn (its colour is the terminal default, which has
+	 * no foreground equivalent) and the next segment simply begins flat.
+	 * Populate it with `--detect-bg` or set it manually.
+	 */
+	terminal_background?: string;
 }
 
 /**

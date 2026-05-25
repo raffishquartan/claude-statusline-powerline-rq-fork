@@ -8,7 +8,21 @@ import {
 	StatuslineConfig,
 } from '../types';
 import { ANSI_RESET, is_transparent_bg } from '../utils/ansi';
+import { hex_to_ansi } from '../utils/colors';
 import { segmentRegistry } from './registry';
+
+/**
+ * Resolve the foreground ANSI used to fill a transparent segment's separator
+ * glyph, from the configured terminal background colour. Returns undefined
+ * when none is set, in which case transparent segments emit no separator.
+ */
+function resolve_transparent_fill(
+	config: StatuslineConfig,
+): string | undefined {
+	return config.terminal_background
+		? hex_to_ansi(config.terminal_background, false)
+		: undefined;
+}
 
 function create_segment(
 	content: string,
@@ -23,23 +37,43 @@ function create_segment(
  *
  * A powerline separator glyph is filled — as a foreground — with the left
  * segment's colour. A transparent (floating) segment's colour is the terminal
- * default background, which cannot be expressed as a foreground: a right-facing
- * glyph would have to be filled with the dark default foreground (a blob), and
- * a left-facing glyph points the wrong way against a left-to-right bar. So a
- * transparent segment emits no glyph and the coloured bar simply begins at the
- * next segment.
+ * default background, which has no foreground equivalent. So a transparent
+ * segment can only emit a (right-facing) glyph when `transparent_fill` — the
+ * configured terminal background colour — is supplied to stand in for it;
+ * otherwise it emits nothing and the coloured bar simply begins flat.
  *
- * A coloured segment uses the normal right-facing glyph filled with its own
- * colour, transitioning to the next segment's background (or the terminal
+ * A coloured segment always uses the normal right-facing glyph filled with its
+ * own colour, transitioning to the next segment's background (or the terminal
  * background when it is the last segment).
  */
 export function render_separator(
 	current: SegmentData,
 	next?: SegmentData,
+	transparent_fill?: string,
 ): string {
-	if (is_transparent_bg(current.bg_color)) return '';
+	const style = (current.separator_style ||
+		'thick') as SeparatorStyle;
 
-	const style = (current.separator_style || 'thick') as SeparatorStyle;
+	if (is_transparent_bg(current.bg_color)) {
+		// With a known terminal background we can fill a normal right-facing
+		// glyph with it, so a floating segment's separator points the same way
+		// as the rest of the bar and its colour matches the terminal. Without
+		// one, there is no foreground colour that represents "transparent", so
+		// the coloured bar simply begins flat at the next segment.
+		if (
+			next &&
+			!is_transparent_bg(next.bg_color) &&
+			transparent_fill
+		) {
+			return create_styled_separator(
+				transparent_fill,
+				next.bg_color,
+				style,
+			);
+		}
+		return '';
+	}
+
 	return create_styled_separator(
 		current.separator_from_color,
 		next ? next.bg_color : '',
@@ -71,6 +105,7 @@ function build_line_segments(
 	}
 
 	// Build output with dynamic separators for this line
+	const transparent_fill = resolve_transparent_fill(config);
 	const output = [];
 	for (let i = 0; i < segments.length; i++) {
 		const current = segments[i];
@@ -87,7 +122,7 @@ function build_line_segments(
 
 		// Add the separator that transitions to the next segment (or the
 		// trailing separator when this is the last segment).
-		output.push(render_separator(current, next));
+		output.push(render_separator(current, next, transparent_fill));
 	}
 
 	return output.join('');
@@ -130,6 +165,7 @@ export function build_statusline(data: ClaudeStatusInput): string {
 	}
 
 	// Build output with dynamic separators
+	const transparent_fill = resolve_transparent_fill(config);
 	const output = [];
 	for (let i = 0; i < segments.length; i++) {
 		const current = segments[i];
@@ -146,7 +182,7 @@ export function build_statusline(data: ClaudeStatusInput): string {
 
 		// Add the separator that transitions to the next segment (or the
 		// trailing separator when this is the last segment).
-		output.push(render_separator(current, next));
+		output.push(render_separator(current, next, transparent_fill));
 	}
 
 	return output.join('');

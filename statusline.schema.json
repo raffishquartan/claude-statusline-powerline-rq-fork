@@ -464,6 +464,10 @@
 		"separators": {
 			"$ref": "#/definitions/SeparatorConfig",
 			"description": "Configure separator styles for different segments and states"
+		},
+		"terminal_background": {
+			"description": "The terminal's background colour, in hex (e.g. \"#fdf6e3\"). Used to fill\nthe powerline separator that follows a transparent (floating) segment so\nit can point the normal direction. Without it, a transparent segment's\nseparator can't be drawn (its colour is the terminal default, which has\nno foreground equivalent) and the next segment simply begins flat.\nPopulate it with `--detect-bg` or set it manually.",
+			"type": "string"
 		}
 	},
 	"type": "object",

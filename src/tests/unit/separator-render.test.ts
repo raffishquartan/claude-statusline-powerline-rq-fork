@@ -3,6 +3,8 @@ import { SegmentData } from '../../types';
 
 const TRANSPARENT_BG = '\x1b[49m';
 const RESET = '\x1b[0m';
+// A terminal-background fill colour, as a foreground code (solarized cream).
+const CREAM_FG = '\x1b[38;2;253;246;227m';
 
 // Powerline curvy glyphs (Private Use Area; defined by code point so the
 // source stays pure ASCII and unambiguous).
@@ -50,14 +52,11 @@ function run_separator_render_tests(): boolean {
 	}
 	console.log('✅ PASS: right glyph, current colour, next bg');
 
-	// Test 2: transparent → coloured must NOT emit a powerline glyph.
-	// A right-facing glyph from a transparent segment would have to be filled
-	// with the terminal-default background (impossible as a foreground), and a
-	// left-facing glyph points the wrong way against a left-to-right bar. So a
-	// floating segment emits nothing and the coloured bar begins cleanly.
-	console.log(
-		'\nTest 2: transparent → coloured emits no glyph (not a wrong-way left glyph)',
-	);
+	// Test 2: transparent → coloured with NO known terminal background emits no
+	// glyph. A right-facing glyph would have to be filled with the terminal
+	// default background (impossible as a foreground) and a left-facing glyph
+	// points the wrong way, so the coloured bar simply begins flat.
+	console.log('\nTest 2: transparent → coloured, no fill → no glyph');
 	const tc = render_separator(transparent('curvy'), blue);
 	if (tc !== '') {
 		console.log('❌ FAIL: expected empty, got', JSON.stringify(tc));
@@ -67,7 +66,26 @@ function run_separator_render_tests(): boolean {
 		}
 		return false;
 	}
-	console.log('✅ PASS: no glyph emitted for transparent → coloured');
+	console.log('✅ PASS: no glyph when terminal background unknown');
+
+	// Test 2b: transparent → coloured WITH a known terminal background renders a
+	// normal RIGHT-facing glyph filled with that background colour, so it points
+	// the same way as every other separator and its colour matches the terminal.
+	console.log(
+		'\nTest 2b: transparent → coloured, with fill → right glyph filled with bg',
+	);
+	const tcf = render_separator(transparent('curvy'), blue, CREAM_FG);
+	const expected_tcf = `${blue.bg_color}${CREAM_FG}${RIGHT_CURVY}${RESET}`;
+	if (tcf !== expected_tcf) {
+		console.log('❌ FAIL: got', JSON.stringify(tcf));
+		console.log('   exp', JSON.stringify(expected_tcf));
+		return false;
+	}
+	if (tcf.includes(LEFT_CURVY)) {
+		console.log('❌ FAIL: used the backwards (left) glyph');
+		return false;
+	}
+	console.log('✅ PASS: right glyph filled with terminal background');
 
 	// Test 3: transparent → transparent → no glyph
 	console.log('\nTest 3: transparent → transparent → empty');

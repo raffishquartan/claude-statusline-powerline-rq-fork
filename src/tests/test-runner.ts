@@ -13,6 +13,7 @@ import { run_window_segment_tests } from './unit/window-segment.test';
 import { run_last_message_time_segment_tests } from './unit/last-message-time-segment.test';
 import { run_separator_config_tests } from './unit/separator-config.test';
 import { run_separator_render_tests } from './unit/separator-render.test';
+import { run_terminal_background_tests } from './unit/terminal-background.test';
 
 async function run_all_tests() {
 	console.log('🚀 Running All Tests\n');
@@ -34,6 +35,10 @@ async function run_all_tests() {
 		{ name: 'Colors', fn: run_colors_tests },
 		{ name: 'Separator Config', fn: run_separator_config_tests },
 		{ name: 'Separator Render', fn: run_separator_render_tests },
+		{
+			name: 'Terminal Background',
+			fn: run_terminal_background_tests,
+		},
 		{ name: 'Window Segment', fn: run_window_segment_tests },
 		{
 			name: 'Last Message Time Segment',
