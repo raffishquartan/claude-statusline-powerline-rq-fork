@@ -80,6 +80,40 @@
 			},
 			"type": "object"
 		},
+		"RateLimitsOptions": {
+			"description": "Options specific to the rate_limits segment. State is driven by the higher\nof the 5-hour and 7-day usage percentages.",
+			"properties": {
+				"color_danger_bg": {
+					"description": "Background color in danger state (default: \"#dc2626\")",
+					"type": "string"
+				},
+				"color_danger_fg": {
+					"description": "Foreground color in danger state — hex or \"auto\" to derive from background (default: \"auto\")",
+					"type": "string"
+				},
+				"color_normal_fg": {
+					"description": "Foreground below the warn threshold (transparent bg) — hex or \"terminal\" (default: \"terminal\")",
+					"type": "string"
+				},
+				"color_warn_bg": {
+					"description": "Background color in warn state (default: \"#d97706\")",
+					"type": "string"
+				},
+				"color_warn_fg": {
+					"description": "Foreground color in warn state — hex or \"auto\" to derive from background (default: \"auto\")",
+					"type": "string"
+				},
+				"threshold_danger": {
+					"description": "% above which the segment turns red (default: 85)",
+					"type": "number"
+				},
+				"threshold_warn": {
+					"description": "% at/above which the segment turns amber (default: 70)",
+					"type": "number"
+				}
+			},
+			"type": "object"
+		},
 		"Record<GitState,SeparatorStyle>": {
 			"properties": {
 				"ahead": {
@@ -121,6 +155,10 @@
 				"last_message_time_options": {
 					"$ref": "#/definitions/LastMessageTimeOptions",
 					"description": "Options specific to the last_message_time segment (only used when type is \"last_message_time\")"
+				},
+				"rate_limits_options": {
+					"$ref": "#/definitions/RateLimitsOptions",
+					"description": "Options specific to the rate_limits segment (only used when type is \"rate_limits\")"
 				},
 				"style": {
 					"$ref": "#/definitions/SegmentStyleConfig",

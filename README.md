@@ -482,6 +482,50 @@ It is transparent while warm and turns red once the cache has likely expired.
 > flips to cold the next time the line is drawn after the threshold elapses,
 > not as a live countdown.
 
+### Rate Limits Options
+
+The `rate_limits` segment colours itself by usage. Its state is driven by the
+**higher** of the 5-hour and 7-day percentages:
+
+- **Transparent** while both windows are below `threshold_warn`
+- **Amber** once either window reaches `threshold_warn` (up to and including
+  `threshold_danger`)
+- **Red** once either window exceeds `threshold_danger`
+
+It is always rendered (showing `waiting for data` until the first API response
+provides data); the waiting/low state is transparent.
+
+```json
+{
+	"segment_config": {
+		"segments": [
+			{
+				"type": "rate_limits",
+				"rate_limits_options": {
+					"threshold_warn": 70,
+					"threshold_danger": 85,
+					"color_normal_fg": "terminal",
+					"color_warn_bg": "#d97706",
+					"color_warn_fg": "auto",
+					"color_danger_bg": "#dc2626",
+					"color_danger_fg": "auto"
+				}
+			}
+		]
+	}
+}
+```
+
+| Option             | Default     | Description                                                                         |
+| ------------------ | ----------- | ----------------------------------------------------------------------------------- |
+| `threshold_warn`   | `70`        | % (of the higher window) at/above which the segment turns amber                     |
+| `threshold_danger` | `85`        | % above which the segment turns red                                                 |
+| `color_normal_fg`  | `"terminal"`| Foreground below the warn threshold (transparent bg). `"terminal"` or a hex value   |
+| `color_warn_bg`    | `"#d97706"` | Background in the warn (amber) state                                                 |
+| `color_warn_fg`    | `"auto"`    | Foreground in the warn state. `"auto"` derives a legible colour from the background |
+| `color_danger_bg`  | `"#dc2626"` | Background in the danger (red) state                                                 |
+| `color_danger_fg`  | `"auto"`    | Foreground in the danger state                                                       |
+
 ## 🪟 Terminal Background & Transparent Segments
 
 Some segments (`window` and `last_message_time`) are **transparent** in
@@ -667,6 +711,9 @@ If the database is unavailable, these segments simply won't appear.
     - Always rendered so its slot in the bar is stable; shows
       `waiting for data` until the first API response provides rate
       limit data (Claude.ai Pro/Max)
+    - Background reflects usage: transparent below 70%, amber at
+      70-85%, red above 85% (driven by the higher window; configurable
+      via [Rate Limits Options](#rate-limits-options))
 
 ## Credits
 

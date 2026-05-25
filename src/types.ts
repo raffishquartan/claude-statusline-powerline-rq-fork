@@ -215,6 +215,27 @@ export interface WindowSegmentOptions {
 }
 
 /**
+ * Options specific to the rate_limits segment. State is driven by the higher
+ * of the 5-hour and 7-day usage percentages.
+ */
+export interface RateLimitsOptions {
+	/** % at/above which the segment turns amber (default: 70) */
+	threshold_warn?: number;
+	/** % above which the segment turns red (default: 85) */
+	threshold_danger?: number;
+	/** Foreground below the warn threshold (transparent bg) — hex or "terminal" (default: "terminal") */
+	color_normal_fg?: string;
+	/** Background color in warn state (default: "#d97706") */
+	color_warn_bg?: string;
+	/** Foreground color in warn state — hex or "auto" to derive from background (default: "auto") */
+	color_warn_fg?: string;
+	/** Background color in danger state (default: "#dc2626") */
+	color_danger_bg?: string;
+	/** Foreground color in danger state — hex or "auto" to derive from background (default: "auto") */
+	color_danger_fg?: string;
+}
+
+/**
  * Defines which segments appear on a specific line
  * Segments are optional (can be omitted from a line)
  */
@@ -340,6 +361,8 @@ export interface SegmentConfig {
 	window_options?: WindowSegmentOptions;
 	/** Options specific to the last_message_time segment (only used when type is "last_message_time") */
 	last_message_time_options?: LastMessageTimeOptions;
+	/** Options specific to the rate_limits segment (only used when type is "rate_limits") */
+	rate_limits_options?: RateLimitsOptions;
 }
 
 /**
