@@ -7,16 +7,12 @@ export class RateLimitsSegment extends BaseSegment {
 	build(
 		data: ClaudeStatusInput,
 		config: StatuslineConfig,
-	): SegmentData | null {
-		if (!data.rate_limits) return null;
-
-		const five_hour = data.rate_limits.five_hour;
-		const seven_day = data.rate_limits.seven_day;
-
-		if (!five_hour && !seven_day) return null;
-
+	): SegmentData {
 		const { style_override, get_icon } = this.setup_segment(config);
 		const warning_icon = get_icon('warning');
+
+		const five_hour = data.rate_limits?.five_hour;
+		const seven_day = data.rate_limits?.seven_day;
 
 		const parts: string[] = [];
 		if (five_hour) {
@@ -26,8 +22,13 @@ export class RateLimitsSegment extends BaseSegment {
 			parts.push(`7d: ${Math.round(seven_day.used_percentage)}%`);
 		}
 
+		// Rate limit data only arrives with the first API response of a
+		// session; until then show a placeholder rather than hiding the
+		// segment, so its slot in the bar is stable from the start.
+		const text = parts.length > 0 ? parts.join(' | ') : 'waiting for data';
+
 		const content = this.finalize_content(
-			`${warning_icon} ${parts.join(' | ')}`,
+			`${warning_icon} ${text}`,
 			config,
 			style_override,
 		);

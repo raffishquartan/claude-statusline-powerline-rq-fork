@@ -86,19 +86,28 @@ function run_rate_limits_segment_tests(): boolean {
 	}
 	console.log('✅ PASS: segment builds with only five_hour');
 
-	// Test 4: segment returns null when no rate_limits
-	console.log('\nTest 4: segment returns null when no rate_limits');
+	// Test 4: segment shows a placeholder (not null) when no rate_limits yet
+	console.log(
+		'\nTest 4: segment shows "waiting for data" when no rate_limits',
+	);
 	const mock_data_none: ClaudeStatusInput = {
 		session_id: 'test-session',
 		model: { display_name: 'Sonnet 4' },
 		workspace: { current_dir: '/test' },
 	};
 	const result_none = segment.build(mock_data_none, mock_config);
-	if (result_none !== null) {
-		console.log('❌ FAIL: expected null when no rate_limits');
+	if (!result_none) {
+		console.log('❌ FAIL: segment should always render, got null');
 		return false;
 	}
-	console.log('✅ PASS: segment returns null when no rate_limits');
+	if (!result_none.content.includes('waiting for data')) {
+		console.log(
+			'❌ FAIL: expected "waiting for data", got: %s',
+			result_none.content,
+		);
+		return false;
+	}
+	console.log('✅ PASS: segment shows "waiting for data" placeholder');
 
 	// Test 5: percentages are rounded to integers
 	console.log('\nTest 5: percentages are rounded to integers');

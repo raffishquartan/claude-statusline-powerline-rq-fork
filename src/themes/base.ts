@@ -38,7 +38,7 @@ export abstract class BaseTheme implements StatuslineTheme {
 			),
 			usage: create_segment_theme('#8b5cf6', this.palette.text_light),
 			rate_limits: create_segment_theme(
-				'#dc2626',
+				'#d97706',
 				this.palette.text_light,
 			),
 			session_id: create_segment_theme(

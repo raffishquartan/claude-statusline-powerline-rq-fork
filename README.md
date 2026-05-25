@@ -664,9 +664,9 @@ If the database is unavailable, these segments simply won't appear.
    - Supports truncation for long IDs (default max 20 chars)
 10. **Rate Limits** - Shows Claude.ai subscription rate limit usage
     - Displays 5-hour and 7-day rolling window percentages
-    - Only appears for Claude.ai subscribers (Pro/Max) after the first
-      API response
-    - Gracefully hides when rate limit data is not available
+    - Always rendered so its slot in the bar is stable; shows
+      `waiting for data` until the first API response provides rate
+      limit data (Claude.ai Pro/Max)
 
 ## Credits
 
