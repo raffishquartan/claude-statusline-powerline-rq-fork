@@ -18,28 +18,45 @@ support.
   superscript symbols
 - 📁 **Directory display** - current working directory
 - 📱 **Model info** - shows which Claude model you're using
-- 💰 **Session tracking** - real-time token usage and cost estimation
-- 📊 **Context monitoring** - smart warnings at 75% and 90% usage
+- 💰 **Session cost** - real-time cost estimation for the session
+- 🧠 **Context window monitoring** - real percentage of the model's
+  context window used, with amber/red thresholds
+- 🕐 **Last message time** - when the last API call was sent, so you
+  can tell whether the prompt cache is still warm
 - 🧠 **Context caching** - displays cache hit rate and warm/cold
   sessions
+- ⚡ **Rate limits** - Claude.ai subscription usage (5h / 7d windows)
+- 🪟 **Transparent (floating) segments** - segments can blend into the
+  terminal background, with separators that adapt to it
 - 🎯 **Settings IntelliSense** - autocomplete, validation, and hover
   docs in settings files
 
 ## 📊 Available Segments
 
-| Segment       | Icon | Description                               | Example Output                 |
-| ------------- | ---- | ----------------------------------------- | ------------------------------ |
-| **Model**     | ⚡   | Shows the Claude model being used         | `⚡ Claude Sonnet 4`           |
-| **Directory** | 📁   | Current working directory name            | `📁 my-project`                |
-| **Git**       | 🌿   | Git branch and status with superscript    | `🌿 main ⁺3 ˜1 ᵘ2`             |
-| **Session**   | 💰   | Token usage, cost, and context monitoring | `💰 1.2k • $0.01 999k left`    |
-| **Usage**     | 📊   | Aggregated usage statistics from database | `📊 29.9k • $8.83 7d`          |
-| **Context**   | 🧠   | Cache performance and session state       | `🧠 10.5k cached (70% reused)` |
-| **Session ID**| ℹ    | Current session identifier                | `ℹ abc123-def456`              |
-| **Rate Limits** | ⚠  | Claude.ai subscription rate limit usage   | `⚠ 5h: 24% \| 7d: 41%`        |
+| Segment              | Icon | Description                                              | Example Output                 |
+| -------------------- | ---- | -------------------------------------------------------- | ------------------------------ |
+| **Model**            | ⚡   | Shows the Claude model being used                        | `⚡ Claude Sonnet 4`           |
+| **Directory**        | 📁   | Current working directory name                           | `📁 my-project`                |
+| **Git**              | 🌿   | Git branch and status with superscript                   | `🌿 main ⁺3 ˜1 ᵘ2`             |
+| **Window**           | 🧠   | Real % of the model's context window used                | `🧠 ~23%`                      |
+| **Last Message Time**| 🕐   | Local time the last API call was sent (cache warm/cold)  | `🕐 21:01`                     |
+| **Session**          | 💰   | Estimated cost of the current session                    | `💰 $0.42`                     |
+| **Usage**            | 📊   | Aggregated usage statistics from database                | `📊 29.9k • $8.83 7d`          |
+| **Context**          | 🧠   | Cache performance and session state                      | `🧠 10.5k cached (70% reused)` |
+| **Session ID**       | ℹ    | Current session identifier                               | `ℹ abc123-def456`              |
+| **Rate Limits**      | ⚠   | Claude.ai subscription rate limit usage                  | `⚠ 5h: 24% \| 7d: 41%`         |
 
 All segments can be **shown/hidden** (via `lines` configuration),
 **reordered**, and **customized** through the configuration file.
+
+> **Window vs Context vs Session.** These three look similar but answer
+> different questions. **Window** reads the latest assistant entry in the
+> session transcript and shows the _current_ context window fill as a
+> percentage of the active model's window (it turns amber, then red, as it
+> approaches auto-compaction). **Context** shows prompt-cache efficiency
+> (hit rate / warm vs cold). **Session** shows the _cumulative_ dollar cost
+> of the session. Window % and Session cost are independent numbers — one is
+> the current context size, the other is total spend.
 
 ## Themes & Configuration
 
@@ -60,15 +77,16 @@ All segments can be **shown/hidden** (via `lines` configuration),
 
 ### ⚡ Available Separator Styles:
 
-- `thick` - Standard powerline separator ▶
-- `thin` - Thin powerline separator →
-- `curvy` - Curved separator (Victor Mono compatible)
-- `angly` - Angular separator \
-- `angly2` - Alternative angular separator /
-- `flame` - Dramatic flame-style effect 🔥
-- `wave` - Wave-like alternating effect 🌊
-- `lightning` - High-energy lightning effect ⚡
+- `thick` - Standard powerline separator (``)
+- `thin` - Thin powerline separator (``)
+- `curvy` - Curved separator (``)
+- `angly` - Angular separator (``)
+- `angly2` - Alternative angular separator (``)
+- `double_chevron` - Double arrow separator (``)
 - `none` - No separator
+
+Run `claude-statusline-powerline --list-separators` to preview the
+glyphs in your own terminal and font.
 
 ## 🔧 Configuration
 
@@ -95,8 +113,15 @@ Claude Statusline Powerline uses JSON configuration files with
 	"$schema": "https://raw.githubusercontent.com/spences10/claude-statusline-powerline/main/statusline.schema.json",
 	"color_theme": "dark",
 	"font_profile": "nerd-font",
+	"terminal_background": "#1e1e1e",
 	"segment_config": {
 		"segments": [
+			{
+				"type": "window"
+			},
+			{
+				"type": "last_message_time"
+			},
 			{
 				"type": "model"
 			},
@@ -125,6 +150,9 @@ Claude Statusline Powerline uses JSON configuration files with
 	}
 }
 ```
+
+`terminal_background` is optional — see
+[Terminal background & transparent segments](#-terminal-background--transparent-segments).
 
 ### Configuration Options
 
@@ -257,27 +285,26 @@ You can use any Unicode character, emoji, or Nerd Font icon code
 
 ### Custom Separators
 
-Customize separators for individual segments or git states:
+Set the separator that follows a segment with the `separator` property in
+its `style`. It accepts either a **bare style string** (shorthand) or an
+**object** with `style` and/or `color`:
 
 ```json
 {
 	"segment_config": {
 		"segments": [
 			{
-				"type": "git",
+				"type": "model",
 				"style": {
-					"separator": {
-						"clean": "thick",
-						"dirty": "lightning",
-						"conflicts": "flame"
-					}
+					"separator": "curvy"
 				}
 			},
 			{
-				"type": "model",
+				"type": "usage",
 				"style": {
 					"separator": {
-						"style": "curvy"
+						"style": "curvy",
+						"color": "#059669"
 					}
 				}
 			}
@@ -285,6 +312,12 @@ Customize separators for individual segments or git states:
 	}
 }
 ```
+
+- `separator: "curvy"` is shorthand for `separator: { "style": "curvy" }`.
+- `color` (hex) overrides the separator glyph colour; by default it matches
+  the segment's background so the powerline transition looks seamless.
+- Valid styles are the ones listed under
+  [Available Separator Styles](#-available-separator-styles).
 
 ### Single Line Layout
 
@@ -369,6 +402,137 @@ Content shorter than the minimum is right-padded with spaces:
 	}
 }
 ```
+
+### Window Segment Options
+
+The `window` segment shows how full the model's context window is. Tune it
+with `window_options` on the segment:
+
+```json
+{
+	"segment_config": {
+		"segments": [
+			{
+				"type": "window",
+				"window_options": {
+					"show_percent": true,
+					"show_tokens": false,
+					"threshold_warn": 51,
+					"threshold_danger": 80,
+					"color_normal_fg": "terminal",
+					"color_warn_bg": "#ea580c",
+					"color_warn_fg": "auto",
+					"color_danger_bg": "#dc2626",
+					"color_danger_fg": "auto"
+				}
+			}
+		]
+	}
+}
+```
+
+| Option             | Default     | Description                                                                          |
+| ------------------ | ----------- | ------------------------------------------------------------------------------------ |
+| `show_percent`     | `true`      | Show `~NN%` of the context window used                                               |
+| `show_tokens`      | `false`     | Show consumed/total tokens, e.g. `120k / 200k` (rounds up; `M` units above 1M)       |
+| `threshold_warn`   | `51`        | % at which the segment turns amber. Default is 60% of the 85% auto-compact point     |
+| `threshold_danger` | `80`        | % at which the segment turns red                                                     |
+| `color_normal_fg`  | `"terminal"`| Foreground below the warn threshold (transparent bg). `"terminal"` or a hex value    |
+| `color_warn_bg`    | `"#ea580c"` | Background in the warn state                                                          |
+| `color_warn_fg`    | `"auto"`    | Foreground in the warn state. `"auto"` derives a legible colour from the background  |
+| `color_danger_bg`  | `"#dc2626"` | Background in the danger state                                                        |
+| `color_danger_fg`  | `"auto"`    | Foreground in the danger state                                                       |
+
+The context window size is looked up per model (including mid-session model
+changes). Unknown models fall back to a conservative 200k window and the
+percentage is shown with a `?`, e.g. `~23%?`.
+
+### Last Message Time Options
+
+The `last_message_time` segment shows the local time of the last assistant
+API call, so you can tell whether the 5-minute prompt cache is still warm.
+It is transparent while warm and turns red once the cache has likely expired.
+
+```json
+{
+	"segment_config": {
+		"segments": [
+			{
+				"type": "last_message_time",
+				"last_message_time_options": {
+					"cache_warn_minutes": 5,
+					"color_warm_fg": "terminal",
+					"color_cold_bg": "#dc2626",
+					"color_cold_fg": "auto"
+				}
+			}
+		]
+	}
+}
+```
+
+| Option               | Default     | Description                                                                |
+| -------------------- | ----------- | -------------------------------------------------------------------------- |
+| `cache_warn_minutes` | `5`         | Minutes since the last API call before the segment turns red (cache cold)  |
+| `color_warm_fg`      | `"terminal"`| Foreground while warm (transparent bg). `"terminal"` or a hex value        |
+| `color_cold_bg`      | `"#dc2626"` | Background once cold                                                        |
+| `color_cold_fg`      | `"auto"`    | Foreground once cold. `"auto"` derives a legible colour from the background |
+
+> The statusline re-renders on each prompt, not continuously — so the colour
+> flips to cold the next time the line is drawn after the threshold elapses,
+> not as a live countdown.
+
+## 🪟 Terminal Background & Transparent Segments
+
+Some segments (`window` and `last_message_time`) are **transparent** in
+their normal state: their background is the terminal default, so they appear
+to float on the terminal rather than sitting in a coloured powerline block.
+
+A powerline separator glyph is filled with the colour of the segment on its
+left. A transparent segment has no such colour — the terminal default
+background cannot be used as a foreground fill — so by default a transparent
+segment emits **no separator** and the next coloured segment simply begins
+flat.
+
+If you tell the statusline what your terminal background colour is, it can
+instead draw a normal, correctly-pointing separator filled with that colour,
+so floating segments connect to the bar seamlessly. Set it with
+`terminal_background` (top-level, hex):
+
+```json
+{
+	"terminal_background": "#fdf6e3"
+}
+```
+
+### Detecting the terminal background
+
+You can try to detect it automatically:
+
+```bash
+# Print the detected colour:
+claude-statusline-powerline --detect-bg
+
+# Detect and save it to your config as terminal_background:
+claude-statusline-powerline --detect-bg --write
+```
+
+`--detect-bg` queries the terminal with an OSC 11 escape sequence. Important
+caveats:
+
+- **Run it directly in your terminal**, not via the statusline. During normal
+  operation Claude Code owns the terminal and feeds the statusline JSON on
+  stdin, so it cannot (and must not) query the terminal itself — doing so
+  would corrupt the session and would run on every redraw.
+- **Inside tmux/screen** the query is often swallowed; if detection times
+  out, read the background colour from your terminal's settings and set
+  `terminal_background` by hand.
+- The value is **static** once set. If your terminal background changes (for
+  example a day/night theme), re-run `--detect-bg --write` or update the hex
+  manually.
+
+If `terminal_background` is unset, everything still works — transparent
+segments simply begin the coloured bar with a flat edge instead of a curve.
 
 ## 📦 Installation
 
@@ -469,30 +633,40 @@ If the database is unavailable, these segments simply won't appear.
 1. **Model** - Shows the Claude model name
 2. **Directory** - Shows current directory name
 3. **Git** - Enhanced status with superscript symbols
-4. **Session** - Current session token usage, cost, and context
-   monitoring
+4. **Window** - Real context-window usage for the active model
+   - Reads the latest assistant entry in the session transcript
+     (`input + cache_read + cache_creation` tokens) — the true current
+     context size, not an estimate
+   - Transparent below the warn threshold, amber, then red as it nears
+     auto-compaction; thresholds and colours are configurable
+   - Optionally shows token counts (`120k / 200k`) and reflects
+     mid-session model changes; see
+     [Window Segment Options](#window-segment-options)
+5. **Last Message Time** - Local time the last API call was sent
+   - Transparent while the prompt cache is warm; turns red once the
+     cache window (default 5 min) has likely expired
+   - See [Last Message Time Options](#last-message-time-options)
+6. **Session** - Estimated cost of the current session
    - **Powered by SQLite database**
-   - Format: `💰 {tokens}k • ${cost} {context}`
-   - Context shows: remaining tokens (< 75%), percentage (75-89%), or
-     warning (!90%+)
+   - Format: `💰 ${cost}` (e.g. `💰 $0.42`), or `💰 nodata` when the
+     session is not yet in the database
    - Must be manually enabled in configuration
-5. **Usage** - Aggregated usage statistics across time periods
+7. **Usage** - Aggregated usage statistics across time periods
    - **Powered by SQLite database** with pre-calculated summaries
    - Format: `📊 {tokens}k • ${cost} {period}`
    - Shows daily/weekly/monthly aggregated data
    - Must be manually enabled in configuration
-
-6. **Context** - Cache performance and session state
+8. **Context** - Cache performance and session state
    - Shows cache hit rate and total cached tokens for warm sessions
    - Displays "Cold" for new sessions without significant cache usage
-7. **Session ID** - Displays the current session identifier
+9. **Session ID** - Displays the current session identifier
    - Useful for distinguishing between multiple concurrent sessions
    - Supports truncation for long IDs (default max 20 chars)
-8. **Rate Limits** - Shows Claude.ai subscription rate limit usage
-   - Displays 5-hour and 7-day rolling window percentages
-   - Only appears for Claude.ai subscribers (Pro/Max) after the first
-     API response
-   - Gracefully hides when rate limit data is not available
+10. **Rate Limits** - Shows Claude.ai subscription rate limit usage
+    - Displays 5-hour and 7-day rolling window percentages
+    - Only appears for Claude.ai subscribers (Pro/Max) after the first
+      API response
+    - Gracefully hides when rate limit data is not available
 
 ## Credits
 

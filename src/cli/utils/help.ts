@@ -33,7 +33,19 @@ export function show_help(): void {
 		'  --reset-config               Reset config to defaults',
 	);
 	console.log(
-		'  --validate-config            Validate current config file\n',
+		'  --validate-config            Validate current config file',
+	);
+	console.log(
+		'  --detect-bg [--write]        Detect the terminal background colour (OSC 11)',
+	);
+	console.log(
+		'                               and print it; --write saves it to the config',
+	);
+	console.log(
+		'                               as terminal_background. Run in a real terminal,',
+	);
+	console.log(
+		'                               not via the statusline (tmux may block it).\n',
 	);
 
 	console.log('Themes & Demo:');
@@ -94,6 +106,9 @@ export function show_help(): void {
 	console.log('  claude-statusline-powerline --stats');
 	console.log(
 		'  claude-statusline-powerline --preview-theme electric',
+	);
+	console.log(
+		'  claude-statusline-powerline --detect-bg --write',
 	);
 	console.log(
 		'  claude-statusline-powerline --export-data json > usage.json',
