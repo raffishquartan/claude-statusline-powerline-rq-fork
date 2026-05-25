@@ -1,8 +1,5 @@
 import { load_config } from '../config';
-import {
-	create_styled_separator,
-	create_styled_separator_left,
-} from '../separators/styles';
+import { create_styled_separator } from '../separators/styles';
 import {
 	ClaudeStatusInput,
 	LineSegments,
@@ -10,11 +7,7 @@ import {
 	SeparatorStyle,
 	StatuslineConfig,
 } from '../types';
-import {
-	ANSI_RESET,
-	ansi_bg_to_fg,
-	is_transparent_bg,
-} from '../utils/ansi';
+import { ANSI_RESET, is_transparent_bg } from '../utils/ansi';
 import { segmentRegistry } from './registry';
 
 function create_segment(
@@ -26,30 +19,27 @@ function create_segment(
 }
 
 /**
- * Render the separator that follows `current`. A powerline separator's
- * appearance depends on both adjacent backgrounds:
+ * Render the separator that follows `current`.
  *
- * - current coloured  → normal right-facing glyph filled with current's colour
- * - current transparent, next coloured → left-facing glyph filled with next's
- *   colour on the transparent cell, so the transparent segment's portion stays
- *   the terminal background instead of a foreground fill
- * - both transparent, or transparent and last → no glyph (nothing to transition)
+ * A powerline separator glyph is filled — as a foreground — with the left
+ * segment's colour. A transparent (floating) segment's colour is the terminal
+ * default background, which cannot be expressed as a foreground: a right-facing
+ * glyph would have to be filled with the dark default foreground (a blob), and
+ * a left-facing glyph points the wrong way against a left-to-right bar. So a
+ * transparent segment emits no glyph and the coloured bar simply begins at the
+ * next segment.
+ *
+ * A coloured segment uses the normal right-facing glyph filled with its own
+ * colour, transitioning to the next segment's background (or the terminal
+ * background when it is the last segment).
  */
 export function render_separator(
 	current: SegmentData,
 	next?: SegmentData,
 ): string {
+	if (is_transparent_bg(current.bg_color)) return '';
+
 	const style = (current.separator_style || 'thick') as SeparatorStyle;
-
-	if (is_transparent_bg(current.bg_color)) {
-		if (!next || is_transparent_bg(next.bg_color)) return '';
-		return create_styled_separator_left(
-			ansi_bg_to_fg(next.bg_color),
-			current.bg_color,
-			style,
-		);
-	}
-
 	return create_styled_separator(
 		current.separator_from_color,
 		next ? next.bg_color : '',
