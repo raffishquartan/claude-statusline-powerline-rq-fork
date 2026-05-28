@@ -316,6 +316,32 @@ function run_window_segment_tests(): boolean {
 		'✅ PASS: object { style: "angly" } applied in transparent state',
 	);
 
+	// Test 11: output_tokens included in numerator
+	// After an assistant response, output tokens are part of the conversation
+	// and will count as input on the next API call — include them now.
+	console.log(
+		'\nTest 11: output_tokens included in context window %',
+	);
+	const with_output = with_session_jsonl(
+		[
+			assistant_usage_entry('claude-sonnet-4-6', {
+				input_tokens: 10000,
+				output_tokens: 10000,
+			}),
+		],
+		(data) => segment.build(data, make_config()),
+	);
+	if (!with_output || !with_output.content.includes('~10%')) {
+		console.log(
+			'❌ FAIL: 10k input + 10k output should give ~10% of 200k, got',
+			with_output?.content,
+		);
+		return false;
+	}
+	console.log(
+		'✅ PASS: input+output combined → 20k / 200k = ~10%',
+	);
+
 	console.log('\n✅ All WindowSegment tests passed!\n');
 	return true;
 }

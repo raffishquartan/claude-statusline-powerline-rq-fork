@@ -243,10 +243,13 @@ export class WindowSegment extends BaseSegment {
 					const usage = msg?.usage;
 					if (!usage) continue;
 
+					// Output tokens become part of the conversation context
+					// on the next turn, so include them in the current estimate.
 					const total_tokens =
 						(usage.input_tokens || 0) +
 						(usage.cache_read_input_tokens || 0) +
-						(usage.cache_creation_input_tokens || 0);
+						(usage.cache_creation_input_tokens || 0) +
+						(usage.output_tokens || 0);
 
 					if (total_tokens === 0) continue;
 
