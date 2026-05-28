@@ -1,5 +1,6 @@
 import {
 	ClaudeStatusInput,
+	ResolvedSegmentStyle,
 	SegmentBuilder,
 	SegmentData,
 	SegmentStyleConfig,
@@ -7,6 +8,7 @@ import {
 } from '../types';
 import { get_fallback_colors } from '../utils/ansi';
 import { hex_to_ansi } from '../utils/colors';
+import { normalize_separator } from '../utils/separator-config';
 import { get_symbol } from '../utils/symbols';
 import { truncate_segment_text } from '../utils/text';
 
@@ -26,7 +28,7 @@ export abstract class BaseSegment implements SegmentBuilder {
 		fg_color: string,
 		separator_from_color: string,
 		separator_style?: string,
-		style_override?: SegmentStyleConfig,
+		style_override?: ResolvedSegmentStyle,
 	): SegmentData {
 		// Apply style overrides if provided
 		const final_bg = style_override?.bg_color || bg_color;
@@ -50,17 +52,22 @@ export abstract class BaseSegment implements SegmentBuilder {
 		};
 	}
 
-	// Helper method to get segment config for this segment type
+	// Helper method to get segment config for this segment type.
+	// The separator is normalised to object form so callers can always
+	// read separator.style / separator.color (see normalize_separator).
 	protected getSegmentConfig(
 		config: StatuslineConfig,
-	): SegmentStyleConfig | undefined {
+	): ResolvedSegmentStyle | undefined {
 		if (!config.segment_config?.segments) return undefined;
 
 		const segment_config = config.segment_config.segments.find(
 			(s) => s.type === this.name.toLowerCase(),
 		);
 
-		return segment_config?.style;
+		const style = segment_config?.style;
+		if (!style) return undefined;
+
+		return { ...style, separator: normalize_separator(style.separator) };
 	}
 
 	/**
@@ -147,7 +154,7 @@ export abstract class BaseSegment implements SegmentBuilder {
 			| 'usage'
 			| 'error',
 		separator_style?: string,
-		style_override?: SegmentStyleConfig,
+		style_override?: ResolvedSegmentStyle,
 	): SegmentData {
 		if (theme_segment) {
 			return this.createSegment(

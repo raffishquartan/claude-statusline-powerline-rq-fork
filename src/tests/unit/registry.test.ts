@@ -77,7 +77,14 @@ function run_registry_tests() {
 
 	// Test 5: Expected segments exist
 	console.log('\nTest 5: Expected segments exist');
-	const expected_segments = ['model', 'directory', 'git', 'session'];
+	const expected_segments = [
+		'model',
+		'directory',
+		'git',
+		'session',
+		'window',
+		'last_message_time',
+	];
 	const registered_names = all_segments.map((s) =>
 		s.name.toLowerCase(),
 	);

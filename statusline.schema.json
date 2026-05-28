@@ -22,6 +22,28 @@
 			],
 			"type": "string"
 		},
+		"LastMessageTimeOptions": {
+			"description": "Options specific to the last_message_time segment",
+			"properties": {
+				"cache_warn_minutes": {
+					"description": "Minutes since last API call before the segment turns red (cache cold). Default: 5",
+					"type": "number"
+				},
+				"color_cold_bg": {
+					"description": "Background color when cache is cold (default: \"#dc2626\")",
+					"type": "string"
+				},
+				"color_cold_fg": {
+					"description": "Foreground color when cache is cold — hex or \"auto\" (default: \"auto\")",
+					"type": "string"
+				},
+				"color_warm_fg": {
+					"description": "Foreground color when cache is warm — hex or \"terminal\" (default: \"terminal\")",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
 		"LineSegments": {
 			"description": "Defines which segments appear on a specific line\nSegments are optional (can be omitted from a line)",
 			"properties": {
@@ -32,6 +54,9 @@
 					"type": "boolean"
 				},
 				"git": {
+					"type": "boolean"
+				},
+				"last_message_time": {
 					"type": "boolean"
 				},
 				"model": {
@@ -48,6 +73,43 @@
 				},
 				"usage": {
 					"type": "boolean"
+				},
+				"window": {
+					"type": "boolean"
+				}
+			},
+			"type": "object"
+		},
+		"RateLimitsOptions": {
+			"description": "Options specific to the rate_limits segment. State is driven by the higher\nof the 5-hour and 7-day usage percentages.",
+			"properties": {
+				"color_danger_bg": {
+					"description": "Background color in danger state (default: \"#dc2626\")",
+					"type": "string"
+				},
+				"color_danger_fg": {
+					"description": "Foreground color in danger state — hex or \"auto\" to derive from background (default: \"auto\")",
+					"type": "string"
+				},
+				"color_normal_fg": {
+					"description": "Foreground below the warn threshold (transparent bg) — hex or \"terminal\" (default: \"terminal\")",
+					"type": "string"
+				},
+				"color_warn_bg": {
+					"description": "Background color in warn state (default: \"#d97706\")",
+					"type": "string"
+				},
+				"color_warn_fg": {
+					"description": "Foreground color in warn state — hex or \"auto\" to derive from background (default: \"auto\")",
+					"type": "string"
+				},
+				"threshold_danger": {
+					"description": "% above which the segment turns red (default: 85)",
+					"type": "number"
+				},
+				"threshold_warn": {
+					"description": "% at/above which the segment turns amber (default: 70)",
+					"type": "number"
 				}
 			},
 			"type": "object"
@@ -90,6 +152,14 @@
 		"SegmentConfig": {
 			"description": "Configuration for a single segment with advanced options",
 			"properties": {
+				"last_message_time_options": {
+					"$ref": "#/definitions/LastMessageTimeOptions",
+					"description": "Options specific to the last_message_time segment (only used when type is \"last_message_time\")"
+				},
+				"rate_limits_options": {
+					"$ref": "#/definitions/RateLimitsOptions",
+					"description": "Options specific to the rate_limits segment (only used when type is \"rate_limits\")"
+				},
 				"style": {
 					"$ref": "#/definitions/SegmentStyleConfig",
 					"description": "Custom styling for this segment"
@@ -97,6 +167,10 @@
 				"type": {
 					"$ref": "#/definitions/SegmentType",
 					"description": "Type of segment"
+				},
+				"window_options": {
+					"$ref": "#/definitions/WindowSegmentOptions",
+					"description": "Options specific to the window segment (only used when type is \"window\")"
 				}
 			},
 			"required": [
@@ -201,23 +275,24 @@
 					"type": "number"
 				},
 				"separator": {
-					"description": "Separator styling",
-					"properties": {
-						"color": {
-							"description": "Separator color in hex format",
-							"type": "string",
-							"pattern": "^#[0-9a-fA-F]{6}$",
-							"examples": [
-								"#1e40af",
-								"#059669"
-							]
+					"anyOf": [
+						{
+							"$ref": "#/definitions/SeparatorOverride"
 						},
-						"style": {
-							"$ref": "#/definitions/SeparatorStyle",
-							"description": "Separator style override"
+						{
+							"enum": [
+								"angly",
+								"angly2",
+								"curvy",
+								"double_chevron",
+								"none",
+								"thick",
+								"thin"
+							],
+							"type": "string"
 						}
-					},
-					"type": "object"
+					],
+					"description": "Separator styling. Either a bare style name (shorthand for\n`{ style: \"<name>\" }`) or an object with `style` and/or `color`."
 				},
 				"truncation_length": {
 					"description": "Maximum length before truncation",
@@ -227,16 +302,18 @@
 			"type": "object"
 		},
 		"SegmentType": {
-			"description": "Types of segments that can be displayed in the statusline\n- `model`: Shows current AI model information\n- `directory`: Shows current directory/path\n- `git`: Shows git repository status\n- `session`: Shows session usage/cost information\n- `context`: Shows cache hit rate and context usage\n- `usage`: Shows usage statistics from SQLite database",
+			"description": "Types of segments that can be displayed in the statusline\n- `model`: Shows current AI model information\n- `directory`: Shows current directory/path\n- `git`: Shows git repository status\n- `session`: Shows session usage/cost information\n- `context`: Shows cache hit rate and context usage\n- `usage`: Shows usage statistics from SQLite database\n- `window`: Shows context window usage as % of model's context window",
 			"enum": [
 				"context",
 				"directory",
 				"git",
+				"last_message_time",
 				"model",
 				"rate_limits",
 				"session",
 				"session_id",
-				"usage"
+				"usage",
+				"window"
 			],
 			"type": "string"
 		},
@@ -278,6 +355,10 @@
 					"$ref": "#/definitions/Record%3CGitState%2CSeparatorStyle%3E",
 					"description": "Separator styles for different git states"
 				},
+				"last_message_time": {
+					"$ref": "#/definitions/SeparatorStyle",
+					"description": "Separator style for the last_message_time segment (used only when cache is cold)"
+				},
 				"model": {
 					"$ref": "#/definitions/SeparatorStyle",
 					"description": "Separator style for the model segment"
@@ -297,6 +378,10 @@
 				"usage": {
 					"$ref": "#/definitions/SeparatorStyle",
 					"description": "Separator style for the usage segment"
+				},
+				"window": {
+					"$ref": "#/definitions/SeparatorStyle",
+					"description": "Separator style for the window segment (used only in warn/danger color states)"
 				}
 			},
 			"required": [
@@ -306,6 +391,25 @@
 				"model",
 				"session"
 			],
+			"type": "object"
+		},
+		"SeparatorOverride": {
+			"description": "Separator styling override for a segment, in object form.",
+			"properties": {
+				"color": {
+					"description": "Separator color in hex format",
+					"type": "string",
+					"pattern": "^#[0-9a-fA-F]{6}$",
+					"examples": [
+						"#1e40af",
+						"#059669"
+					]
+				},
+				"style": {
+					"$ref": "#/definitions/SeparatorStyle",
+					"description": "Separator style override"
+				}
+			},
 			"type": "object"
 		},
 		"SeparatorStyle": {
@@ -320,6 +424,48 @@
 				"thin"
 			],
 			"type": "string"
+		},
+		"WindowSegmentOptions": {
+			"description": "Options specific to the window segment",
+			"properties": {
+				"color_danger_bg": {
+					"description": "Background color in danger state (default: \"#dc2626\")",
+					"type": "string"
+				},
+				"color_danger_fg": {
+					"description": "Foreground color in danger state — hex or \"auto\" to derive from background (default: \"auto\")",
+					"type": "string"
+				},
+				"color_normal_fg": {
+					"description": "Foreground color in normal (transparent) state — hex or \"terminal\" for terminal default (default: \"terminal\")",
+					"type": "string"
+				},
+				"color_warn_bg": {
+					"description": "Background color in warn state (default: \"#ea580c\")",
+					"type": "string"
+				},
+				"color_warn_fg": {
+					"description": "Foreground color in warn state — hex or \"auto\" to derive from background (default: \"auto\")",
+					"type": "string"
+				},
+				"show_percent": {
+					"description": "Show percentage of context window used (default: true)",
+					"type": "boolean"
+				},
+				"show_tokens": {
+					"description": "Show consumed/total token counts e.g. \"42k / 200k\" (default: false)",
+					"type": "boolean"
+				},
+				"threshold_danger": {
+					"description": "% threshold for red/danger color (default: 80)",
+					"type": "number"
+				},
+				"threshold_warn": {
+					"description": "% threshold for amber/warning color (default: 51 = 60% of the 85% auto-compact point)",
+					"type": "number"
+				}
+			},
+			"type": "object"
 		}
 	},
 	"properties": {
@@ -356,6 +502,10 @@
 		"separators": {
 			"$ref": "#/definitions/SeparatorConfig",
 			"description": "Configure separator styles for different segments and states"
+		},
+		"terminal_background": {
+			"description": "The terminal's background colour, in hex (e.g. \"#fdf6e3\"). Used to fill\nthe powerline separator that follows a transparent (floating) segment so\nit can point the normal direction. Without it, a transparent segment's\nseparator can't be drawn (its colour is the terminal default, which has\nno foreground equivalent) and the next segment simply begins flat.\nPopulate it with `--detect-bg` or set it manually.",
+			"type": "string"
 		}
 	},
 	"type": "object",
