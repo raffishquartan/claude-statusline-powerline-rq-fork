@@ -1,5 +1,6 @@
 import {
 	ClaudeStatusInput,
+	ResolvedSegmentStyle,
 	SegmentBuilder,
 	SegmentData,
 	SegmentStyleConfig,
@@ -7,6 +8,7 @@ import {
 } from '../types';
 import { get_fallback_colors } from '../utils/ansi';
 import { hex_to_ansi } from '../utils/colors';
+import { normalize_separator } from '../utils/separator-config';
 import { get_symbol } from '../utils/symbols';
 import { truncate_segment_text } from '../utils/text';
 
@@ -26,7 +28,7 @@ export abstract class BaseSegment implements SegmentBuilder {
 		fg_color: string,
 		separator_from_color: string,
 		separator_style?: string,
-		style_override?: SegmentStyleConfig,
+		style_override?: ResolvedSegmentStyle,
 	): SegmentData {
 		// Apply style overrides if provided
 		const final_bg = style_override?.bg_color || bg_color;
@@ -50,17 +52,22 @@ export abstract class BaseSegment implements SegmentBuilder {
 		};
 	}
 
-	// Helper method to get segment config for this segment type
+	// Helper method to get segment config for this segment type.
+	// The separator is normalised to object form so callers can always
+	// read separator.style / separator.color (see normalize_separator).
 	protected getSegmentConfig(
 		config: StatuslineConfig,
-	): SegmentStyleConfig | undefined {
+	): ResolvedSegmentStyle | undefined {
 		if (!config.segment_config?.segments) return undefined;
 
 		const segment_config = config.segment_config.segments.find(
 			(s) => s.type === this.name.toLowerCase(),
 		);
 
-		return segment_config?.style;
+		const style = segment_config?.style;
+		if (!style) return undefined;
+
+		return { ...style, separator: normalize_separator(style.separator) };
 	}
 
 	/**
@@ -81,6 +88,20 @@ export abstract class BaseSegment implements SegmentBuilder {
 	}
 
 	/**
+	 * Pad content to minimum_width if configured
+	 */
+	protected apply_minimum_width(
+		content: string,
+		style_override?: SegmentStyleConfig,
+	): string {
+		const min_width = style_override?.minimum_width;
+		if (min_width && content.length < min_width) {
+			return content + ' '.repeat(min_width - content.length);
+		}
+		return content;
+	}
+
+	/**
 	 * Truncate text for this segment using config
 	 */
 	protected truncate_text(
@@ -88,18 +109,33 @@ export abstract class BaseSegment implements SegmentBuilder {
 		config: StatuslineConfig,
 		style_override?: SegmentStyleConfig,
 	): string {
-		// Only support truncation for segments that have standardized truncation
-		const segment_type = this.name as 'model' | 'directory' | 'git';
-		if (!['model', 'directory', 'git'].includes(segment_type)) {
-			return text;
-		}
-
 		return truncate_segment_text(
 			text,
-			segment_type,
+			this.name,
 			style_override,
 			config,
 		);
+	}
+
+	/**
+	 * Apply truncation then minimum_width to full segment content.
+	 * Call this on the complete content string (including icons)
+	 * before passing to create_segment_with_fallback.
+	 */
+	protected finalize_content(
+		content: string,
+		config: StatuslineConfig,
+		style_override?: SegmentStyleConfig,
+	): string {
+		const resolved_style =
+			style_override ?? this.getSegmentConfig(config);
+		let result = this.truncate_text(
+			content,
+			config,
+			resolved_style,
+		);
+		result = this.apply_minimum_width(result, resolved_style);
+		return result;
 	}
 
 	/**
@@ -118,7 +154,7 @@ export abstract class BaseSegment implements SegmentBuilder {
 			| 'usage'
 			| 'error',
 		separator_style?: string,
-		style_override?: SegmentStyleConfig,
+		style_override?: ResolvedSegmentStyle,
 	): SegmentData {
 		if (theme_segment) {
 			return this.createSegment(

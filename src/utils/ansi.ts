@@ -5,6 +5,15 @@
 // Reset codes
 export const ANSI_RESET = '\x1b[0m';
 
+// Terminal-default (transparent) codes: keep the terminal's own colours
+export const ANSI_BG_DEFAULT = '\x1b[49m';
+export const ANSI_FG_DEFAULT = '\x1b[39m';
+
+/** True when a background ANSI code is the terminal default (transparent). */
+export function is_transparent_bg(bg_color: string): boolean {
+	return bg_color === ANSI_BG_DEFAULT;
+}
+
 // Background colors (48;2;r;g;b format for 24-bit)
 export const ANSI_BG = {
 	red: '\x1b[41m',
@@ -68,6 +77,16 @@ export const FALLBACK_COLORS = {
 		bg: ANSI_BG.purple,
 		fg: ANSI_FG.bright_white,
 		separator: ANSI_FG.purple,
+	},
+	session_id: {
+		bg: ANSI_BG.blue,
+		fg: ANSI_FG.bright_white,
+		separator: ANSI_FG.blue,
+	},
+	rate_limits: {
+		bg: ANSI_BG.red,
+		fg: ANSI_FG.bright_white,
+		separator: ANSI_FG.red,
 	},
 	error: {
 		bg: ANSI_BG.red,

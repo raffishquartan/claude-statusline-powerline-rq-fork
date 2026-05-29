@@ -26,6 +26,10 @@ const DEFAULT_SEPARATORS: SeparatorConfig = {
 	session: 'thick',
 	context: 'thick',
 	usage: 'thick',
+	session_id: 'thick',
+	rate_limits: 'thick',
+	window: 'thick',
+	last_message_time: 'thick',
 };
 
 // Default segments configuration with basic styling
@@ -187,6 +191,33 @@ export function load_config(): StatuslineConfig {
 
 // Model pricing configuration (per million tokens)
 export const MODEL_PRICING: Record<string, ModelPricing> = {
+	// Claude Opus 4.7
+	'claude-opus-4-7': {
+		name: 'Opus 4.7',
+		input_tokens: 15,
+		output_tokens: 75,
+		cache_tokens: 1.5,
+		context_window: 1_000_000,
+	},
+
+	// Claude Sonnet 4.6
+	'claude-sonnet-4-6': {
+		name: 'Sonnet 4.6',
+		input_tokens: 3,
+		output_tokens: 15,
+		cache_tokens: 0.3,
+		context_window: 200_000,
+	},
+
+	// Claude Haiku 4.5
+	'claude-haiku-4-5-20251001': {
+		name: 'Haiku 4.5',
+		input_tokens: 0.8,
+		output_tokens: 4,
+		cache_tokens: 0.08,
+		context_window: 200_000,
+	},
+
 	// Claude Opus 4.1 (Max plan only)
 	'claude-opus-4-1-20250805': {
 		name: 'Claude Opus 4.1',

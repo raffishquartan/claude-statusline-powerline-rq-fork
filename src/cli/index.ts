@@ -12,6 +12,7 @@ import {
 	show_database_info,
 } from './commands/database';
 import { demo_theme, run_demo, test_segments } from './commands/demo';
+import { detect_background } from './commands/detect-bg';
 import {
 	install_statusline,
 	uninstall_statusline,
@@ -82,6 +83,10 @@ export function run_cli(): void {
 
 		case '--validate-config':
 			validate_config();
+			break;
+
+		case '--detect-bg':
+			void detect_background(args.includes('--write'));
 			break;
 
 		case '--reset-config':

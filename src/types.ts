@@ -15,6 +15,17 @@ export interface ClaudeStatusInput {
 		/** Display name for the model */
 		display_name: string;
 	};
+	/** Rate limit usage information (Claude.ai subscribers only) */
+	rate_limits?: {
+		five_hour?: {
+			used_percentage: number;
+			resets_at: number;
+		};
+		seven_day?: {
+			used_percentage: number;
+			resets_at: number;
+		};
+	};
 	/** Workspace information */
 	workspace: {
 		/** Current working directory */
@@ -66,6 +77,7 @@ export type SeparatorStyle =
  * - `session`: Shows session usage/cost information
  * - `context`: Shows cache hit rate and context usage
  * - `usage`: Shows usage statistics from SQLite database
+ * - `window`: Shows context window usage as % of model's context window
  */
 export type SegmentType =
 	| 'model'
@@ -73,7 +85,11 @@ export type SegmentType =
 	| 'git'
 	| 'session'
 	| 'context'
-	| 'usage';
+	| 'usage'
+	| 'session_id'
+	| 'rate_limits'
+	| 'window'
+	| 'last_message_time';
 
 /**
  * Available themes that define separator and styling patterns
@@ -150,6 +166,73 @@ export interface SeparatorConfig {
 	context: SeparatorStyle;
 	/** Separator style for the usage segment */
 	usage?: SeparatorStyle;
+	/** Separator style for the session_id segment */
+	session_id?: SeparatorStyle;
+	/** Separator style for the rate_limits segment */
+	rate_limits?: SeparatorStyle;
+	/** Separator style for the window segment (used only in warn/danger color states) */
+	window?: SeparatorStyle;
+	/** Separator style for the last_message_time segment (used only when cache is cold) */
+	last_message_time?: SeparatorStyle;
+}
+
+/**
+ * Options specific to the last_message_time segment
+ */
+export interface LastMessageTimeOptions {
+	/** Minutes since last API call before the segment turns red (cache cold). Default: 5 */
+	cache_warn_minutes?: number;
+	/** Foreground color when cache is warm — hex or "terminal" (default: "terminal") */
+	color_warm_fg?: string;
+	/** Background color when cache is cold (default: "#dc2626") */
+	color_cold_bg?: string;
+	/** Foreground color when cache is cold — hex or "auto" (default: "auto") */
+	color_cold_fg?: string;
+}
+
+/**
+ * Options specific to the window segment
+ */
+export interface WindowSegmentOptions {
+	/** Show percentage of context window used (default: true) */
+	show_percent?: boolean;
+	/** Show consumed/total token counts e.g. "42k / 200k" (default: false) */
+	show_tokens?: boolean;
+	/** % threshold for amber/warning color (default: 51 = 60% of the 85% auto-compact point) */
+	threshold_warn?: number;
+	/** % threshold for red/danger color (default: 80) */
+	threshold_danger?: number;
+	/** Foreground color in normal (transparent) state — hex or "terminal" for terminal default (default: "terminal") */
+	color_normal_fg?: string;
+	/** Background color in warn state (default: "#ea580c") */
+	color_warn_bg?: string;
+	/** Foreground color in warn state — hex or "auto" to derive from background (default: "auto") */
+	color_warn_fg?: string;
+	/** Background color in danger state (default: "#dc2626") */
+	color_danger_bg?: string;
+	/** Foreground color in danger state — hex or "auto" to derive from background (default: "auto") */
+	color_danger_fg?: string;
+}
+
+/**
+ * Options specific to the rate_limits segment. State is driven by the higher
+ * of the 5-hour and 7-day usage percentages.
+ */
+export interface RateLimitsOptions {
+	/** % at/above which the segment turns amber (default: 70) */
+	threshold_warn?: number;
+	/** % above which the segment turns red (default: 85) */
+	threshold_danger?: number;
+	/** Foreground below the warn threshold (transparent bg) — hex or "terminal" (default: "terminal") */
+	color_normal_fg?: string;
+	/** Background color in warn state (default: "#d97706") */
+	color_warn_bg?: string;
+	/** Foreground color in warn state — hex or "auto" to derive from background (default: "auto") */
+	color_warn_fg?: string;
+	/** Background color in danger state (default: "#dc2626") */
+	color_danger_bg?: string;
+	/** Foreground color in danger state — hex or "auto" to derive from background (default: "auto") */
+	color_danger_fg?: string;
 }
 
 /**
@@ -176,6 +259,15 @@ export interface StatuslineConfig {
 	current_theme?: any;
 	/** Advanced segment configuration with styling */
 	segment_config?: SegmentsConfiguration;
+	/**
+	 * The terminal's background colour, in hex (e.g. "#fdf6e3"). Used to fill
+	 * the powerline separator that follows a transparent (floating) segment so
+	 * it can point the normal direction. Without it, a transparent segment's
+	 * separator can't be drawn (its colour is the terminal default, which has
+	 * no foreground equivalent) and the next segment simply begins flat.
+	 * Populate it with `--detect-bg` or set it manually.
+	 */
+	terminal_background?: string;
 }
 
 /**
@@ -214,6 +306,16 @@ export interface ModelPricing {
 }
 
 /**
+ * Separator styling override for a segment, in object form.
+ */
+export interface SeparatorOverride {
+	/** Separator style override */
+	style?: SeparatorStyle;
+	/** Separator color override */
+	color?: string;
+}
+
+/**
  * Styling configuration for individual segments
  */
 export interface SegmentStyleConfig {
@@ -221,19 +323,30 @@ export interface SegmentStyleConfig {
 	bg_color?: string;
 	/** Foreground/text color (hex or color name) */
 	fg_color?: string;
-	/** Separator styling */
-	separator?: {
-		/** Separator style override */
-		style?: SeparatorStyle;
-		/** Separator color override */
-		color?: string;
-	};
+	/**
+	 * Separator styling. Either a bare style name (shorthand for
+	 * `{ style: "<name>" }`) or an object with `style` and/or `color`.
+	 */
+	separator?: SeparatorStyle | SeparatorOverride;
 	/** Custom icons for the segment */
 	icons?: {
 		[key: string]: string;
 	};
 	/** Maximum length before truncation */
 	truncation_length?: number;
+	/** Minimum width - content will be padded with spaces if shorter */
+	minimum_width?: number;
+}
+
+/**
+ * A segment style whose `separator` has been normalised to object form.
+ * Produced by BaseSegment.getSegmentConfig so downstream code can always
+ * read `separator.style` / `separator.color` regardless of which form the
+ * user wrote in the config file.
+ */
+export interface ResolvedSegmentStyle
+	extends Omit<SegmentStyleConfig, 'separator'> {
+	separator?: SeparatorOverride;
 }
 
 /**
@@ -244,6 +357,12 @@ export interface SegmentConfig {
 	type: SegmentType;
 	/** Custom styling for this segment */
 	style?: SegmentStyleConfig;
+	/** Options specific to the window segment (only used when type is "window") */
+	window_options?: WindowSegmentOptions;
+	/** Options specific to the last_message_time segment (only used when type is "last_message_time") */
+	last_message_time_options?: LastMessageTimeOptions;
+	/** Options specific to the rate_limits segment (only used when type is "rate_limits") */
+	rate_limits_options?: RateLimitsOptions;
 }
 
 /**
@@ -308,6 +427,8 @@ export interface StatuslineTheme {
 		session: SegmentTheme;
 		context: SegmentTheme;
 		usage?: SegmentTheme;
+		session_id?: SegmentTheme;
+		rate_limits?: SegmentTheme;
 	};
 }
 

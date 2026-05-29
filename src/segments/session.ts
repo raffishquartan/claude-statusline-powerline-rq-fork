@@ -1,10 +1,8 @@
-import { DEFAULT_PRICING, MODEL_PRICING } from '../config';
 import {
 	ClaudeStatusInput,
 	SessionUsage,
 	StatuslineConfig,
 } from '../types';
-import { format_tokens } from '../utils/token-formatting';
 import { get_usage_db } from '../utils/usage-db';
 import { BaseSegment, SegmentData } from './base';
 
@@ -18,39 +16,23 @@ export class SessionSegment extends BaseSegment {
 		// First try to get session data from database
 		const usage = this.get_session_usage(data);
 		if (!usage) {
-			return null; // Hide segment if no session data available
+			return this.no_data_yet(config);
 		}
 
-		const total_tokens =
-			usage.totalInputTokens + usage.totalOutputTokens;
 		const cost_str =
 			usage.totalCost < 0.01
 				? '< $0.01'
 				: `$${usage.totalCost.toFixed(2)}`;
 
-		// Calculate context usage
-		const pricing =
-			MODEL_PRICING[usage.modelUsed || ''] || DEFAULT_PRICING;
-		const context_used = total_tokens;
-		const context_remaining = pricing.context_window - context_used;
-		const context_percent = Math.round(
-			(context_used / pricing.context_window) * 100,
-		);
-
-		// Format context display
-		let context_display = '';
-		if (context_percent >= 90) {
-			context_display = ` !${context_percent}%`;
-		} else if (context_percent >= 75) {
-			context_display = ` ${context_percent}%`;
-		} else {
-			context_display = ` ${Math.round(context_remaining / 1000)}k left`;
-		}
-
 		const { style_override, get_icon } = this.setup_segment(config);
 		const theme = config.current_theme?.segments.session;
 		const cost_icon = get_icon('cost');
-		const content = `${cost_icon} ${format_tokens(total_tokens)} • ${cost_str}${context_display}`;
+		const raw_content = `${cost_icon} ${cost_str}`;
+		const content = this.finalize_content(
+			raw_content,
+			config,
+			style_override,
+		);
 
 		return this.create_segment_with_fallback(
 			content,
@@ -87,9 +69,27 @@ export class SessionSegment extends BaseSegment {
 			// No session found in database
 			return null;
 		} catch (error) {
-			// Database error - don't show segment
+			// Database error
 			return null;
 		}
+	}
+
+	private no_data_yet(config: StatuslineConfig): SegmentData {
+		const { style_override, get_icon } = this.setup_segment(config);
+		const theme = config.current_theme?.segments.session;
+		const cost_icon = get_icon('cost');
+		const content = this.finalize_content(
+			`${cost_icon} nodata`,
+			config,
+			style_override,
+		);
+		return this.create_segment_with_fallback(
+			content,
+			theme,
+			'session',
+			config.separators.session,
+			style_override,
+		);
 	}
 
 	private calculate_session_duration(

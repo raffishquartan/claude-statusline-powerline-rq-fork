@@ -2,7 +2,18 @@ import { run_statusline_integration_tests } from './integration/statusline.test'
 import { run_base_segment_tests } from './unit/base-segment.test';
 import { run_config_tests } from './unit/config.test';
 import { run_registry_tests } from './unit/registry.test';
+import { run_minimum_width_tests } from './unit/minimum-width.test';
+import { run_rate_limits_segment_tests } from './unit/rate-limits-segment.test';
+import { run_session_id_segment_tests } from './unit/session-id-segment.test';
+import { run_finalize_content_tests } from './unit/finalize-content.test';
 import { run_session_segment_tests } from './unit/session-segment.test';
+import { run_model_context_tests } from './unit/model-context.test';
+import { run_colors_tests } from './unit/colors.test';
+import { run_window_segment_tests } from './unit/window-segment.test';
+import { run_last_message_time_segment_tests } from './unit/last-message-time-segment.test';
+import { run_separator_config_tests } from './unit/separator-config.test';
+import { run_separator_render_tests } from './unit/separator-render.test';
+import { run_terminal_background_tests } from './unit/terminal-background.test';
 
 async function run_all_tests() {
 	console.log('🚀 Running All Tests\n');
@@ -12,7 +23,27 @@ async function run_all_tests() {
 		{ name: 'Base Segment', fn: run_base_segment_tests },
 		{ name: 'Config', fn: run_config_tests },
 		{ name: 'Registry', fn: run_registry_tests },
+		{ name: 'Finalize Content', fn: run_finalize_content_tests },
+		{ name: 'Minimum Width', fn: run_minimum_width_tests },
+		{
+			name: 'Rate Limits Segment',
+			fn: run_rate_limits_segment_tests,
+		},
+		{ name: 'Session ID Segment', fn: run_session_id_segment_tests },
 		{ name: 'Session Segment', fn: run_session_segment_tests },
+		{ name: 'Model Context', fn: run_model_context_tests },
+		{ name: 'Colors', fn: run_colors_tests },
+		{ name: 'Separator Config', fn: run_separator_config_tests },
+		{ name: 'Separator Render', fn: run_separator_render_tests },
+		{
+			name: 'Terminal Background',
+			fn: run_terminal_background_tests,
+		},
+		{ name: 'Window Segment', fn: run_window_segment_tests },
+		{
+			name: 'Last Message Time Segment',
+			fn: run_last_message_time_segment_tests,
+		},
 		{
 			name: 'Statusline Integration',
 			fn: run_statusline_integration_tests,
