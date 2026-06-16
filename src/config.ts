@@ -191,6 +191,15 @@ export function load_config(): StatuslineConfig {
 
 // Model pricing configuration (per million tokens)
 export const MODEL_PRICING: Record<string, ModelPricing> = {
+	// Claude Opus 4.8
+	'claude-opus-4-8': {
+		name: 'Opus 4.8',
+		input_tokens: 15,
+		output_tokens: 75,
+		cache_tokens: 1.5,
+		context_window: 1_000_000,
+	},
+
 	// Claude Opus 4.7
 	'claude-opus-4-7': {
 		name: 'Opus 4.7',

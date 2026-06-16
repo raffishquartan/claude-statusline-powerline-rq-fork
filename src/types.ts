@@ -33,6 +33,30 @@ export interface ClaudeStatusInput {
 		/** Optional project root directory */
 		project_dir?: string;
 	};
+	/**
+	 * Context window usage, supplied directly by Claude Code. Authoritative
+	 * source for the window segment — already accounts for the active model's
+	 * real window size (e.g. 1M vs 200k) and the full token composition.
+	 */
+	context_window?: {
+		/** Total input tokens counted toward the window */
+		total_input_tokens: number;
+		/** Total output tokens counted toward the window */
+		total_output_tokens: number;
+		/** Active model's context window size in tokens */
+		context_window_size: number;
+		/** Percentage of the window consumed (integer) */
+		used_percentage: number;
+		/** Percentage of the window remaining (integer) */
+		remaining_percentage: number;
+		/** Token breakdown for the most recent turn */
+		current_usage: {
+			input_tokens: number;
+			output_tokens: number;
+			cache_creation_input_tokens: number;
+			cache_read_input_tokens: number;
+		};
+	};
 }
 
 /**
