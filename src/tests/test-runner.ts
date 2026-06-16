@@ -7,7 +7,6 @@ import { run_rate_limits_segment_tests } from './unit/rate-limits-segment.test';
 import { run_session_id_segment_tests } from './unit/session-id-segment.test';
 import { run_finalize_content_tests } from './unit/finalize-content.test';
 import { run_session_segment_tests } from './unit/session-segment.test';
-import { run_model_context_tests } from './unit/model-context.test';
 import { run_colors_tests } from './unit/colors.test';
 import { run_window_segment_tests } from './unit/window-segment.test';
 import { run_last_message_time_segment_tests } from './unit/last-message-time-segment.test';
@@ -31,7 +30,6 @@ async function run_all_tests() {
 		},
 		{ name: 'Session ID Segment', fn: run_session_id_segment_tests },
 		{ name: 'Session Segment', fn: run_session_segment_tests },
-		{ name: 'Model Context', fn: run_model_context_tests },
 		{ name: 'Colors', fn: run_colors_tests },
 		{ name: 'Separator Config', fn: run_separator_config_tests },
 		{ name: 'Separator Render', fn: run_separator_render_tests },

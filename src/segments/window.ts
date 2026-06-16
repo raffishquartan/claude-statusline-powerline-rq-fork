@@ -1,5 +1,3 @@
-import * as fs from 'node:fs';
-import * as path from 'node:path';
 import {
 	ClaudeStatusInput,
 	SegmentData,
@@ -8,7 +6,6 @@ import {
 } from '../types';
 import { ANSI_BG_DEFAULT, ANSI_FG_DEFAULT } from '../utils/ansi';
 import { hex_to_ansi, pick_fg_for_hex_bg } from '../utils/colors';
-import { get_context_window } from '../utils/model-context';
 import { get_symbol } from '../utils/symbols';
 import { BaseSegment } from './base';
 
@@ -71,11 +68,12 @@ export class WindowSegment extends BaseSegment {
 		const style_override = this.getSegmentConfig(config);
 		const opts = this.resolve_options(config);
 
-		const entry = this.read_last_entry(data);
+		const cw = data.context_window;
 		const brain_icon = get_symbol('brain', style_override?.icons);
 
-		// No data yet — show dash in transparent/normal colours
-		if (!entry) {
+		// Claude Code hasn't supplied context window usage — show dash in
+		// transparent/normal colours
+		if (!cw) {
 			const content = this.finalize_content(
 				`${brain_icon} -`,
 				config,
@@ -90,25 +88,24 @@ export class WindowSegment extends BaseSegment {
 			);
 		}
 
-		const { total_tokens, model_id } = entry;
-		const { window: ctx_window, known } = get_context_window(model_id);
-		const percent = Math.round((total_tokens / ctx_window) * 100);
+		const percent = cw.used_percentage;
+		const consumed = cw.total_input_tokens + cw.total_output_tokens;
 
 		const parts: string[] = [];
 
 		if (opts.show_percent) {
-			parts.push(known ? `~${percent}%` : `~${percent}%?`);
+			parts.push(`${percent}%`);
 		}
 
 		if (opts.show_tokens) {
 			parts.push(
-				`${format_consumed(total_tokens)} / ${format_window_size(ctx_window)}`,
+				`${format_consumed(consumed)} / ${format_window_size(cw.context_window_size)}`,
 			);
 		}
 
 		// If both display options are off, show percent anyway
 		if (parts.length === 0) {
-			parts.push(known ? `~${percent}%` : `~${percent}%?`);
+			parts.push(`${percent}%`);
 		}
 
 		const raw_content = `${brain_icon} ${parts.join(' ')}`;
@@ -215,58 +212,5 @@ export class WindowSegment extends BaseSegment {
 			color_danger_fg:
 				o.color_danger_fg ?? DEFAULTS.color_danger_fg,
 		};
-	}
-
-	private read_last_entry(
-		data: ClaudeStatusInput,
-	): { total_tokens: number; model_id: string } | null {
-		if (!data.session_id) return null;
-
-		const session_file = path.join(
-			process.env.HOME || '',
-			'.claude/projects',
-			data.workspace.current_dir.replace(/\//g, '-'),
-			`${data.session_id}.jsonl`,
-		);
-
-		try {
-			const content = fs.readFileSync(session_file, 'utf8');
-			const lines = content.trim().split('\n');
-
-			// Scan from end to find the most recent assistant entry with usage
-			for (let i = lines.length - 1; i >= 0; i--) {
-				try {
-					const entry = JSON.parse(lines[i]);
-					if (entry.type !== 'assistant') continue;
-
-					const msg = entry.message;
-					const usage = msg?.usage;
-					if (!usage) continue;
-
-					// Output tokens become part of the conversation context
-					// on the next turn, so include them in the current estimate.
-					const total_tokens =
-						(usage.input_tokens || 0) +
-						(usage.cache_read_input_tokens || 0) +
-						(usage.cache_creation_input_tokens || 0) +
-						(usage.output_tokens || 0);
-
-					if (total_tokens === 0) continue;
-
-					// Use model from the JSONL entry so mid-session model
-					// changes are reflected correctly
-					const model_id =
-						msg.model || data.model?.id || '';
-
-					return { total_tokens, model_id };
-				} catch {
-					// Skip malformed lines
-				}
-			}
-
-			return null;
-		} catch {
-			return null;
-		}
 	}
 }
