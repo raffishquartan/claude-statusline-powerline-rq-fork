@@ -26,8 +26,8 @@ support.
 - 🧠 **Context caching** - displays cache hit rate and warm/cold
   sessions
 - ⚡ **Rate limits** - Claude.ai subscription usage (5h / 7d windows)
-- ⌛ **Rate limit reset** - local time the 5h or 7d rate-limit window
-  resets
+- ⌛ **Rate limit reset** - when the 5h or 7d rate-limit window resets
+  (clock time or day count)
 - 🪟 **Transparent (floating) segments** - segments can blend into the
   terminal background, with separators that adapt to it
 - 🎯 **Settings IntelliSense** - autocomplete, validation, and hover
@@ -534,10 +534,16 @@ provides data); the waiting/low state is transparent.
 
 ### Rate Limit Reset Options
 
-The `rate_limit_reset` segment shows the local time a Claude.ai rate-limit
-window resets (e.g. `⌛ 13:06`), computed from the same `resets_at` timestamp
-the `rate_limits` segment uses. It always renders with a single neutral
-appearance — no warn/danger colour states.
+The `rate_limit_reset` segment shows when a Claude.ai rate-limit window
+resets, computed from the same `resets_at` timestamp the `rate_limits`
+segment uses. It always renders with a single neutral appearance — no
+warn/danger colour states.
+
+- `"five_hour"` resets within the same day, so it's shown as a local
+  `HH:MM` clock time, e.g. `⌛ 13:06`.
+- `"seven_day"` can reset days out, where a bare clock time is
+  ambiguous, so it's shown as a day count instead, e.g. `⌛ 3 days`
+  (rounded up to the next whole day).
 
 ```json
 {
@@ -751,9 +757,10 @@ If the database is unavailable, these segments simply won't appear.
     - Background reflects usage: transparent below 70%, amber at
       70-85%, red above 85% (driven by the higher window; configurable
       via [Rate Limits Options](#rate-limits-options))
-11. **Rate Limit Reset** - Local time a Claude.ai rate-limit window resets
-    - Format: `⌛ HH:MM` (24-hour, local time), or `⌛ -` before the
-      first API response provides rate limit data
+11. **Rate Limit Reset** - When a Claude.ai rate-limit window resets
+    - Format: `⌛ HH:MM` (24-hour, local time) for the 5-hour window,
+      `⌛ N days` for the 7-day window, or `⌛ -` before the first API
+      response provides rate limit data
     - Shows the 5-hour window's reset time by default; configurable to
       show the 7-day window instead — see
       [Rate Limit Reset Options](#rate-limit-reset-options)

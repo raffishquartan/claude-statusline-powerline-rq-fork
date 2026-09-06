@@ -41,8 +41,10 @@ edited.
   branching, unlike `window.ts` and `rate-limits.ts`.
 - No change to the existing `rate_limits` segment's behavior or
   output.
-- No countdown/relative-time display (e.g. "in 3h 3m") - only the
-  absolute local `HH:MM`, per the proposal.
+- No sub-day countdown display (e.g. "in 3h 3m") for the `five_hour`
+  window - only the absolute local `HH:MM`, per the proposal. (Amended
+  post-implementation: the `seven_day` window does use a relative day
+  count rather than an absolute value - see Decisions.)
 
 ## Decisions
 
@@ -83,6 +85,16 @@ edited.
   `number`, Unix seconds) - no session/transcript file reads are
   needed (unlike `last_message_time`, which has no equivalent field on
   `ClaudeStatusInput` and must parse the transcript JSONL itself).
+- **`seven_day` shows a day count (`N days`), not `HH:MM`** (amended
+  after initial implementation, on user feedback). A bare clock time
+  is ambiguous once the reset could be several days out - `13:06`
+  doesn't say _which_ day - so the display format branches on
+  `opts.window`: `five_hour` keeps the original absolute `HH:MM`
+  (always same-day, so unambiguous), `seven_day` shows
+  `Math.ceil((resets_at*1000 - Date.now()) / 86_400_000)` days,
+  clamped to a minimum of 0, with the literal word "days" even for a
+  count of 1 (matching the exact wording requested: "1 days", not "1
+  day") for consistency rather than correct pluralisation.
 
 ## Risks / Trade-offs
 

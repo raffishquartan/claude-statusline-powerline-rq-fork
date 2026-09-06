@@ -30,7 +30,7 @@ export class RateLimitResetSegment extends BaseSegment {
 		const window_data = data.rate_limits?.[opts.window];
 
 		const raw_content = window_data
-			? `${hourglass_icon} ${this.format_hhmm(new Date(window_data.resets_at * 1000))}`
+			? `${hourglass_icon} ${this.format_reset(window_data.resets_at, opts.window)}`
 			: `${hourglass_icon} -`;
 
 		const content = this.finalize_content(
@@ -70,9 +70,33 @@ export class RateLimitResetSegment extends BaseSegment {
 		};
 	}
 
+	/**
+	 * five_hour resets within the same day, so a local HH:MM clock time is
+	 * meaningful. seven_day can reset days out, where a bare clock time
+	 * (with no date) is ambiguous, so it's shown as a day count instead.
+	 */
+	private format_reset(
+		resets_at: number,
+		window: RateLimitResetOptions['window'],
+	): string {
+		if (window === 'seven_day') {
+			return this.format_days_remaining(resets_at);
+		}
+		return this.format_hhmm(new Date(resets_at * 1000));
+	}
+
 	private format_hhmm(date: Date): string {
 		const hh = date.getHours().toString().padStart(2, '0');
 		const mm = date.getMinutes().toString().padStart(2, '0');
 		return `${hh}:${mm}`;
+	}
+
+	private format_days_remaining(resets_at: number): string {
+		const ms_remaining = resets_at * 1000 - Date.now();
+		const days = Math.max(
+			0,
+			Math.ceil(ms_remaining / (24 * 60 * 60 * 1000)),
+		);
+		return `${days} days`;
 	}
 }

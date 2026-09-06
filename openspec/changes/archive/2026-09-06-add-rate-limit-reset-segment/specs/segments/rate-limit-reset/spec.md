@@ -1,8 +1,8 @@
 ## Purpose
 
-Shows the local wall-clock time a Claude.ai rate-limit window (5-hour
-or 7-day) resets, so a user can see when their usage headroom returns
-without leaving the terminal.
+Shows when a Claude.ai rate-limit window (5-hour or 7-day) resets, so
+a user can see when their usage headroom returns without leaving the
+terminal.
 
 ## ADDED Requirements
 
@@ -33,9 +33,14 @@ a `rate_limit_reset` segment, with allowed values `"five_hour"` and
 
 When the configured window's `resets_at` timestamp is present on the
 input data, the system SHALL render the segment as an hourglass icon
-followed by that timestamp formatted as local 24-hour `HH:MM`.
+followed by a display of that reset time whose format depends on the
+configured window: the `five_hour` window (which always resets within
+the same day) as a local 24-hour `HH:MM` clock time; the `seven_day`
+window (which can reset days out, where a bare clock time is
+ambiguous) as a count of days remaining until reset, rounded up to the
+next whole day.
 
-#### Scenario: Reset time available
+#### Scenario: Reset time available for the five_hour window
 
 - **WHEN** `rate_limits.five_hour.resets_at` is present on the
   statusline input and the segment is configured for the `five_hour`
@@ -43,6 +48,16 @@ followed by that timestamp formatted as local 24-hour `HH:MM`.
 - **THEN** the segment displays the hourglass icon followed by that
   timestamp converted to the local timezone and formatted as `HH:MM`
   (24-hour, zero-padded)
+
+#### Scenario: Reset time available for the seven_day window
+
+- **WHEN** `rate_limits.seven_day.resets_at` is present on the
+  statusline input and the segment is configured for the `seven_day`
+  window
+- **THEN** the segment displays the hourglass icon followed by the
+  number of days remaining until that timestamp (rounded up to the
+  next whole day) followed by the literal word "days" (e.g. `3 days`,
+  including for a single day remaining)
 
 ### Requirement: Missing data placeholder
 

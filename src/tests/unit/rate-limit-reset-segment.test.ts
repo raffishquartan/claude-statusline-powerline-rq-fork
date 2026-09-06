@@ -115,11 +115,12 @@ function run_rate_limit_reset_segment_tests(): boolean {
 		'✅ PASS: default window shows the five_hour reset time',
 	);
 
-	// Test 3: window: 'seven_day' shows the 7-day reset time instead
+	// Test 3: window: 'seven_day' shows a day count instead of a clock time
+	// (a bare HH:MM is ambiguous when the reset could be days away)
 	console.log(
-		'\nTest 3: window="seven_day" shows seven_day reset time',
+		'\nTest 3: window="seven_day" shows "N days" instead of HH:MM',
 	);
-	const seven_day_reset = new Date(Date.now() + 5 * 24 * 60 * 60_000);
+	const seven_day_reset_ms = Date.now() + 5 * 24 * 60 * 60_000;
 	const seven_day_window = segment.build(
 		with_rate_limits({
 			five_hour: {
@@ -128,24 +129,47 @@ function run_rate_limit_reset_segment_tests(): boolean {
 			},
 			seven_day: {
 				used_percentage: 41.2,
-				resets_at: Math.floor(seven_day_reset.getTime() / 1000),
+				resets_at: Math.floor(seven_day_reset_ms / 1000),
 			},
 		}),
 		make_config({ window: 'seven_day' }),
 	);
 	if (
 		!seven_day_window ||
-		!seven_day_window.content.includes(expected_hhmm(seven_day_reset))
+		!seven_day_window.content.includes('5 days')
 	) {
 		console.log(
-			`❌ FAIL: expected ${expected_hhmm(seven_day_reset)}, got`,
+			'❌ FAIL: expected "5 days", got',
 			seven_day_window?.content,
 		);
 		return false;
 	}
-	console.log(
-		'✅ PASS: window="seven_day" shows the seven_day reset time',
+	console.log('✅ PASS: window="seven_day" shows "5 days"');
+
+	// Test 3b: partial days round up (2.1 days away → "3 days")
+	console.log('\nTest 3b: partial day rounds up');
+	const partial_day_window = segment.build(
+		with_rate_limits({
+			seven_day: {
+				used_percentage: 41.2,
+				resets_at: Math.floor(
+					(Date.now() + 2.1 * 24 * 60 * 60_000) / 1000,
+				),
+			},
+		}),
+		make_config({ window: 'seven_day' }),
 	);
+	if (
+		!partial_day_window ||
+		!partial_day_window.content.includes('3 days')
+	) {
+		console.log(
+			'❌ FAIL: expected "3 days" (rounded up), got',
+			partial_day_window?.content,
+		);
+		return false;
+	}
+	console.log('✅ PASS: 2.1 days rounds up to "3 days"');
 
 	// Test 4: no rate_limits block at all → dash placeholder
 	console.log('\nTest 4: no rate_limits data → dash placeholder');
