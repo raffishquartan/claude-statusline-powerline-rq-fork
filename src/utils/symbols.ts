@@ -28,6 +28,7 @@ export const UNTRACKED_SYMBOL = '\u1D58';
 // Context symbols
 export const BRAIN_SYMBOL = '🧠';
 export const CLOCK_SYMBOL = '🕐';
+export const HOURGLASS_SYMBOL = '⌛';
 
 /**
  * Get a symbol with optional override support
@@ -60,6 +61,7 @@ export function get_symbol(
 		untracked: UNTRACKED_SYMBOL,
 		brain: BRAIN_SYMBOL,
 		clock: CLOCK_SYMBOL,
+		hourglass: HOURGLASS_SYMBOL,
 	};
 
 	return symbol_map[symbol_name] || symbol_name;

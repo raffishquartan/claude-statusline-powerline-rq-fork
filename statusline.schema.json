@@ -62,6 +62,9 @@
 				"model": {
 					"type": "boolean"
 				},
+				"rate_limit_reset": {
+					"type": "boolean"
+				},
 				"rate_limits": {
 					"type": "boolean"
 				},
@@ -76,6 +79,17 @@
 				},
 				"window": {
 					"type": "boolean"
+				}
+			},
+			"type": "object"
+		},
+		"RateLimitResetOptions": {
+			"description": "Options specific to the rate_limit_reset segment. Always rendered with a\nsingle neutral appearance — no warn/danger colour states.",
+			"properties": {
+				"window": {
+					"description": "Which rate-limit window's reset time to show (default: \"five_hour\")",
+					"enum": ["five_hour", "seven_day"],
+					"type": "string"
 				}
 			},
 			"type": "object"
@@ -156,6 +170,10 @@
 					"$ref": "#/definitions/LastMessageTimeOptions",
 					"description": "Options specific to the last_message_time segment (only used when type is \"last_message_time\")"
 				},
+				"rate_limit_reset_options": {
+					"$ref": "#/definitions/RateLimitResetOptions",
+					"description": "Options specific to the rate_limit_reset segment (only used when type is \"rate_limit_reset\")"
+				},
 				"rate_limits_options": {
 					"$ref": "#/definitions/RateLimitsOptions",
 					"description": "Options specific to the rate_limits segment (only used when type is \"rate_limits\")"
@@ -173,9 +191,7 @@
 					"description": "Options specific to the window segment (only used when type is \"window\")"
 				}
 			},
-			"required": [
-				"type"
-			],
+			"required": ["type"],
 			"type": "object"
 		},
 		"SegmentStyleConfig": {
@@ -185,20 +201,13 @@
 					"description": "Background color in hex format (e.g., #1e40af)",
 					"type": "string",
 					"pattern": "^#[0-9a-fA-F]{6}$",
-					"examples": [
-						"#1e40af",
-						"#059669",
-						"#dc2626"
-					]
+					"examples": ["#1e40af", "#059669", "#dc2626"]
 				},
 				"fg_color": {
 					"description": "Foreground (text) color in hex format (e.g., #ffffff)",
 					"type": "string",
 					"pattern": "^#[0-9a-fA-F]{6}$",
-					"examples": [
-						"#ffffff",
-						"#000000"
-					]
+					"examples": ["#ffffff", "#000000"]
 				},
 				"icons": {
 					"additionalProperties": {
@@ -211,62 +220,32 @@
 						"folder": {
 							"type": "string",
 							"description": "Directory/folder icon",
-							"examples": [
-								"📁",
-								"🗂️",
-								"📂",
-								"\\uF07B"
-							]
+							"examples": ["📁", "🗂️", "📂", "\\uF07B"]
 						},
 						"branch": {
 							"type": "string",
 							"description": "Git branch icon",
-							"examples": [
-								"\\uE0A0",
-								"🌿",
-								"🌳",
-								"\\uF126"
-							]
+							"examples": ["\\uE0A0", "🌿", "🌳", "\\uF126"]
 						},
 						"clean": {
 							"type": "string",
 							"description": "Clean git status icon",
-							"examples": [
-								"✓",
-								"✅",
-								"\\u2713",
-								"\\uF00C"
-							]
+							"examples": ["✓", "✅", "\\u2713", "\\uF00C"]
 						},
 						"dirty": {
 							"type": "string",
 							"description": "Dirty git status icon",
-							"examples": [
-								"±",
-								"⚠️",
-								"\\u00B1",
-								"\\uF071"
-							]
+							"examples": ["±", "⚠️", "\\u00B1", "\\uF071"]
 						},
 						"ai": {
 							"type": "string",
 							"description": "AI/Model icon",
-							"examples": [
-								"⚡",
-								"🤖",
-								"🧠",
-								"\\uE007"
-							]
+							"examples": ["⚡", "🤖", "🧠", "\\uE007"]
 						},
 						"cost": {
 							"type": "string",
 							"description": "Session cost/usage icon",
-							"examples": [
-								"💰",
-								"💲",
-								"🪙",
-								"\\uF0D6"
-							]
+							"examples": ["💰", "💲", "🪙", "\\uF0D6"]
 						}
 					}
 				},
@@ -309,6 +288,7 @@
 				"git",
 				"last_message_time",
 				"model",
+				"rate_limit_reset",
 				"rate_limits",
 				"session",
 				"session_id",
@@ -335,9 +315,7 @@
 					"type": "array"
 				}
 			},
-			"required": [
-				"segments"
-			],
+			"required": ["segments"],
 			"type": "object"
 		},
 		"SeparatorConfig": {
@@ -363,6 +341,10 @@
 					"$ref": "#/definitions/SeparatorStyle",
 					"description": "Separator style for the model segment"
 				},
+				"rate_limit_reset": {
+					"$ref": "#/definitions/SeparatorStyle",
+					"description": "Separator style for the rate_limit_reset segment"
+				},
 				"rate_limits": {
 					"$ref": "#/definitions/SeparatorStyle",
 					"description": "Separator style for the rate_limits segment"
@@ -384,13 +366,7 @@
 					"description": "Separator style for the window segment (used only in warn/danger color states)"
 				}
 			},
-			"required": [
-				"context",
-				"directory",
-				"git",
-				"model",
-				"session"
-			],
+			"required": ["context", "directory", "git", "model", "session"],
 			"type": "object"
 		},
 		"SeparatorOverride": {
@@ -400,10 +376,7 @@
 					"description": "Separator color in hex format",
 					"type": "string",
 					"pattern": "^#[0-9a-fA-F]{6}$",
-					"examples": [
-						"#1e40af",
-						"#059669"
-					]
+					"examples": ["#1e40af", "#059669"]
 				},
 				"style": {
 					"$ref": "#/definitions/SeparatorStyle",

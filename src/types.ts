@@ -113,7 +113,8 @@ export type SegmentType =
 	| 'session_id'
 	| 'rate_limits'
 	| 'window'
-	| 'last_message_time';
+	| 'last_message_time'
+	| 'rate_limit_reset';
 
 /**
  * Available themes that define separator and styling patterns
@@ -198,6 +199,8 @@ export interface SeparatorConfig {
 	window?: SeparatorStyle;
 	/** Separator style for the last_message_time segment (used only when cache is cold) */
 	last_message_time?: SeparatorStyle;
+	/** Separator style for the rate_limit_reset segment */
+	rate_limit_reset?: SeparatorStyle;
 }
 
 /**
@@ -257,6 +260,15 @@ export interface RateLimitsOptions {
 	color_danger_bg?: string;
 	/** Foreground color in danger state — hex or "auto" to derive from background (default: "auto") */
 	color_danger_fg?: string;
+}
+
+/**
+ * Options specific to the rate_limit_reset segment. Always rendered with a
+ * single neutral appearance — no warn/danger colour states.
+ */
+export interface RateLimitResetOptions {
+	/** Which rate-limit window's reset time to show (default: "five_hour") */
+	window?: 'five_hour' | 'seven_day';
 }
 
 /**
@@ -387,6 +399,8 @@ export interface SegmentConfig {
 	last_message_time_options?: LastMessageTimeOptions;
 	/** Options specific to the rate_limits segment (only used when type is "rate_limits") */
 	rate_limits_options?: RateLimitsOptions;
+	/** Options specific to the rate_limit_reset segment (only used when type is "rate_limit_reset") */
+	rate_limit_reset_options?: RateLimitResetOptions;
 }
 
 /**
