@@ -30,6 +30,7 @@ const DEFAULT_SEPARATORS: SeparatorConfig = {
 	rate_limits: 'thick',
 	window: 'thick',
 	last_message_time: 'thick',
+	rate_limit_reset: 'thick',
 };
 
 // Default segments configuration with basic styling

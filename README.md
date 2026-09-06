@@ -26,6 +26,8 @@ support.
 - 🧠 **Context caching** - displays cache hit rate and warm/cold
   sessions
 - ⚡ **Rate limits** - Claude.ai subscription usage (5h / 7d windows)
+- ⌛ **Rate limit reset** - local time the 5h or 7d rate-limit window
+  resets
 - 🪟 **Transparent (floating) segments** - segments can blend into the
   terminal background, with separators that adapt to it
 - 🎯 **Settings IntelliSense** - autocomplete, validation, and hover
@@ -45,6 +47,7 @@ support.
 | **Context**          | 🧠   | Cache performance and session state                      | `🧠 10.5k cached (70% reused)` |
 | **Session ID**       | ℹ    | Current session identifier                               | `ℹ abc123-def456`              |
 | **Rate Limits**      | ⚠   | Claude.ai subscription rate limit usage                  | `⚠ 5h: 24% \| 7d: 41%`         |
+| **Rate Limit Reset** | ⌛   | Local time a rate-limit window resets                    | `⌛ 13:06`                     |
 
 All segments can be **shown/hidden** (via `lines` configuration),
 **reordered**, and **customized** through the configuration file.
@@ -145,6 +148,9 @@ Claude Statusline Powerline uses JSON configuration files with
 			},
 			{
 				"type": "rate_limits"
+			},
+			{
+				"type": "rate_limit_reset"
 			}
 		]
 	}
@@ -526,6 +532,37 @@ provides data); the waiting/low state is transparent.
 | `color_danger_bg`  | `"#dc2626"` | Background in the danger (red) state                                                 |
 | `color_danger_fg`  | `"auto"`    | Foreground in the danger state                                                       |
 
+### Rate Limit Reset Options
+
+The `rate_limit_reset` segment shows the local time a Claude.ai rate-limit
+window resets (e.g. `⌛ 13:06`), computed from the same `resets_at` timestamp
+the `rate_limits` segment uses. It always renders with a single neutral
+appearance — no warn/danger colour states.
+
+```json
+{
+	"segment_config": {
+		"segments": [
+			{
+				"type": "rate_limit_reset",
+				"rate_limit_reset_options": {
+					"window": "five_hour"
+				}
+			}
+		]
+	}
+}
+```
+
+| Option   | Default       | Description                                                       |
+| -------- | ------------- | ----------------------------------------------------------------- |
+| `window` | `"five_hour"` | Which window's reset time to show: `"five_hour"` or `"seven_day"` |
+
+Like `rate_limits`, this segment only has data on Claude.ai Pro/Max
+subscriptions. It always renders (so its slot in the bar is stable), showing
+`⌛ -` until the configured window's data arrives. To show both reset times,
+add two `rate_limit_reset` segments with different `window` values.
+
 ## 🪟 Terminal Background & Transparent Segments
 
 Some segments (`window` and `last_message_time`) are **transparent** in
@@ -714,6 +751,13 @@ If the database is unavailable, these segments simply won't appear.
     - Background reflects usage: transparent below 70%, amber at
       70-85%, red above 85% (driven by the higher window; configurable
       via [Rate Limits Options](#rate-limits-options))
+11. **Rate Limit Reset** - Local time a Claude.ai rate-limit window resets
+    - Format: `⌛ HH:MM` (24-hour, local time), or `⌛ -` before the
+      first API response provides rate limit data
+    - Shows the 5-hour window's reset time by default; configurable to
+      show the 7-day window instead — see
+      [Rate Limit Reset Options](#rate-limit-reset-options)
+    - Always transparent — no warn/danger colour states
 
 ## Credits
 

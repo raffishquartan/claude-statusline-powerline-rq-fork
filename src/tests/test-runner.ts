@@ -10,6 +10,7 @@ import { run_session_segment_tests } from './unit/session-segment.test';
 import { run_colors_tests } from './unit/colors.test';
 import { run_window_segment_tests } from './unit/window-segment.test';
 import { run_last_message_time_segment_tests } from './unit/last-message-time-segment.test';
+import { run_rate_limit_reset_segment_tests } from './unit/rate-limit-reset-segment.test';
 import { run_separator_config_tests } from './unit/separator-config.test';
 import { run_separator_render_tests } from './unit/separator-render.test';
 import { run_terminal_background_tests } from './unit/terminal-background.test';
@@ -41,6 +42,10 @@ async function run_all_tests() {
 		{
 			name: 'Last Message Time Segment',
 			fn: run_last_message_time_segment_tests,
+		},
+		{
+			name: 'Rate Limit Reset Segment',
+			fn: run_rate_limit_reset_segment_tests,
 		},
 		{
 			name: 'Statusline Integration',
