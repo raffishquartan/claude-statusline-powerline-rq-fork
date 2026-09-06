@@ -1,5 +1,13 @@
 # claude-statusline-powerline
 
+## 0.2.0
+
+### Minor Changes
+
+- 64c2b9c: Add a `rate_limit_reset` segment that shows the local reset
+  time (`HH:MM`) of a Claude.ai rate-limit window (5-hour or 7-day,
+  configurable via `rate_limit_reset_options.window`).
+
 ## 0.0.19
 
 ### Patch Changes
